@@ -1,11 +1,12 @@
 import React from 'react'
 import { motion } from "motion/react"
-import { GiArtificialHive } from "react-icons/gi";
 import { FaArrowRight } from "react-icons/fa6";
 import LoginModel from '../components/LoginModel';
 import { useState } from 'react';
 import dashboard from "../assets/image.png"
 import { FiMic, FiFileText, FiBarChart2, FiMap } from "react-icons/fi";
+import { BRAND_LOGO, BRAND_NAME, BRAND_SHORT } from '../utils/brand';
+import BrandMark from '../components/BrandMark';
 function Home({ setUser }) {
     const [showLogin, setShowLogin] = useState(false)
     return (
@@ -19,19 +20,13 @@ function Home({ setUser }) {
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 className='fixed top-0 left-0 right-0 z-50 h-[52px] flex items-center justify-between px-5 bg-white/70 backdrop-blur-xl border-b border-black/5'>
 
-                <div className='flex items-center gap-2'>
-
-                    <div className='w-7 h-7 rounded-lg bg-[#0A0A0A] flex items-center justify-center shadow-[0_4px_14px_rgba(0,0,0,0.18)]'>
-                        <GiArtificialHive size={15} color='white' /></div>
-
-                    <span className='font-extrabold text-base tracking-tight text-[#0A0A0A]'>FresherAI</span>
-                </div>
+                <BrandMark />
 
                 <motion.button
                     onClick={() => setShowLogin(true)}
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.97 }}
-                    className='bg-[#0A0A0A]/80 backdrop-blur-2xl text-white font-semibold border border-white/10 rounded-md px-3 py-1.5 text-xs cursor-pointer transition-all hover:border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.25)] flex items-center gap-2'>
+                    className='bg-[#0B1630] backdrop-blur-2xl text-white font-semibold border border-[#6D35FF]/20 rounded-md px-3 py-1.5 text-xs cursor-pointer transition-all hover:border-[#6D35FF]/50 hover:bg-[#251855] shadow-[0_8px_24px_rgba(109,53,255,0.22)] flex items-center gap-2'>
                     Log In <FaArrowRight />
 
                 </motion.button>
@@ -69,7 +64,7 @@ function Home({ setUser }) {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.55, delay: 0.2 }}
                         className='text-black/45 text-sm leading-relaxed max-w-md mx-auto mb-6 [text-shadow:0_2px_10px_rgba(0,0,0,0.06)]'>
-                        Fresher.AI is an innovative AI-powered interview preparation platform
+                        {BRAND_NAME} is an AI-powered interview preparation platform
                         designed to help job seekers excel in their interviews.
                     </motion.p>
 
@@ -82,7 +77,7 @@ function Home({ setUser }) {
                             onClick={() => setShowLogin(true)}
                             whileHover={{ scale: 1.05, boxShadow: "0 0 36px rgba(0,0,0,0.18)" }}
                             whileTap={{ scale: 0.97 }}
-                            className='relative  gap-2 overflow-hidden bg-[#0A0A0A]/80 backdrop-blur-2xl text-white font-bold px-5 py-2.5 rounded-lg text-xs cursor-pointer border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all hover:border-white/20'>
+                            className='relative  gap-2 overflow-hidden bg-[#0B1630] backdrop-blur-2xl text-white font-bold px-5 py-2.5 rounded-lg text-xs cursor-pointer border border-[#6D35FF]/20 shadow-[0_8px_32px_rgba(109,53,255,0.24)] transition-all hover:border-[#6D35FF]/50 hover:bg-[#251855]'>
                             <span className='flex items-center justify-center gap-2'> Get Started For Free <FaArrowRight /></span>
                             <span className='absolute inset-0 bg-gradient-to-br from-white/[0.1] via-transparent to-transparent pointer-events-none rounded-lg' />
                         </motion.button>
@@ -118,7 +113,7 @@ function Home({ setUser }) {
                         </h2>
 
                         <p className='text-black/40 text-sm max-w-2xl mx-auto mt-4 leading-relaxed'>
-                            Fresher.AI combines multiple AI agents that work together
+                            {BRAND_NAME} combines multiple AI agents that work together
                             to help you build your resume, practice interviews,
                             receive detailed feedback, and follow a personalized roadmap
                             to land your dream job.
@@ -179,14 +174,14 @@ function Home({ setUser }) {
 
                 <footer className='border-t border-black/7 py-6 text-center bg-white'>
                 <div className='flex items-center justify-center gap-2 mb-1.5'>
-                    <div className='w-5 h-5 rounded-md bg-[#0A0A0A] flex items-center justify-center'>
-                        <GiArtificialHive size={11} color='white'/>
+                    <div className='w-6 h-6 rounded-md bg-white flex items-center justify-center border border-[#6D35FF]/15 overflow-hidden'>
+                        <img src={BRAND_LOGO} alt="" className='h-5 w-5 object-contain' />
 
                     </div>
-                    <span className='font-bold text-xs text-[#0A0A0A]/70'>FresherAI</span>
+                    <span className='font-bold text-xs text-[#0A0A0A]/70'>{BRAND_SHORT}</span>
                 </div>
                 <div className='text-black/50 text-xs'>
-                © {new Date().getFullYear()} Fresher.AI · All rights reserved
+                © {new Date().getFullYear()} {BRAND_NAME} · All rights reserved
                 </div>
 
                 </footer>

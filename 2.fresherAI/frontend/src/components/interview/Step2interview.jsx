@@ -3,7 +3,7 @@ import { useState } from 'react'
 import maleVideo from "../../assets/male-ai.mp4"
 import femaleVideo from "../../assets/female-ai.mp4"
 import { AnimatePresence, motion } from "motion/react"
-import { FiArrowRight, FiCamera, FiCameraOff, FiClock, FiCode, FiLogOut, FiMessageSquare, FiMic, FiMicOff } from 'react-icons/fi'
+import { FiArrowRight, FiCamera, FiCameraOff, FiClock, FiCode, FiCpu, FiLogOut, FiMessageSquare, FiMic, FiMicOff, FiRadio } from 'react-icons/fi'
 import CodeEditor from './CodeEditor'
 import Timer from './Timer'
 import { submitAnswer } from '../../apis/interview.api'
@@ -26,6 +26,8 @@ const navigate = useNavigate()
 
   // Speech
   const [isAIPlaying, setIsAIPlaying] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [voiceGender, setVoiceGender] = useState("female");
@@ -43,12 +45,25 @@ const navigate = useNavigate()
   const videoSource = voiceGender === "female" ? femaleVideo : maleVideo
   const progress = ((currentIndex + 1)/(interviewData.totalQuestions))*100
   const showMicon = micOn && !isAIPlaying
+  const questionSource = question?.source || (interviewData.useResume ? "resume" : "general")
+  const interviewMode = interviewData.type?.toLowerCase() === "hr" ? "HR Interview" : "Technical Interview"
+  const modeHint = interviewData.type?.toLowerCase() === "hr" ? "People, communication, and culture fit" : "Role, coding, and scenario readiness"
+  const sourceLabels = {
+    resume: "Resume-based",
+    general: "General",
+    coding: "Coding",
+    scenario: "Scenario",
+    behavioral: "Behavioral",
+  }
+  const composedAnswer = () => `${answer} ${interimTranscript}`.trim()
 
   const stopInterviewActivity = (updateUi = true) => {
     leavingRef.current = true;
     if (updateUi) {
       setTimerActive(false);
       setIsAIPlaying(false);
+      setIsListening(false);
+      setInterimTranscript("");
       setSubtitle("");
     }
 
@@ -88,13 +103,31 @@ const navigate = useNavigate()
   useEffect(()=>{
     if(!("webkitSpeechRecognition" in window))return;
     const rec = new window.webkitSpeechRecognition()
-     rec.lang = "en-US";
+    rec.lang = "en-US";
     rec.continuous = true;
-    rec.interimResults = false;
+    rec.interimResults = true;
+    rec.onstart = () => setIsListening(true);
+    rec.onend = () => setIsListening(false);
     rec.onresult = (e)=>{
-      const t = e.results[e.results.length - 1][0].transcript;
-      setAnswer((prev)=>prev + " "+ t)
+      let finalText = "";
+      let liveText = "";
+
+      for (let i = e.resultIndex; i < e.results.length; i += 1) {
+        const transcript = e.results[i][0].transcript;
+        if (e.results[i].isFinal) {
+          finalText += `${transcript} `;
+        } else {
+          liveText += transcript;
+        }
+      }
+
+      if (finalText.trim()) {
+        setAnswer((prev) => `${prev}${prev.trim() ? " " : ""}${finalText.trim()}`);
+      }
+
+      setInterimTranscript(liveText.trim());
     }
+    rec.onerror = () => setIsListening(false);
     recognitionRef.current = rec
   },[])
 
@@ -110,6 +143,8 @@ const navigate = useNavigate()
   const stopMic = ()=>{
     try {
       recognitionRef.current?.stop()
+      setInterimTranscript("")
+      setIsListening(false)
     } catch (error) {
       console.log(error)
     }
@@ -245,6 +280,7 @@ const navigate = useNavigate()
     setQuestion(interviewData.question);
     setCurrentIndex(interviewData.currentQuestion);
     setTimeLeft(interviewData.question.timer || 60);
+    setInterimTranscript("");
 
   },[interviewData])
 
@@ -271,7 +307,7 @@ const navigate = useNavigate()
     if(timeLeft !== 0)return;
     const autoSubmit = async () => {
       await speakText("Time is up. Submitting your answer now.");
-      const finalAnswer = answer.trim() || "No answer provided. Time over.";
+      const finalAnswer = composedAnswer() || "No answer provided. Time over.";
 
       setLoading(true)
 
@@ -299,6 +335,7 @@ const navigate = useNavigate()
       setQuestion(res.question);
       setCurrentIndex(res.currentQuestion);
       setAnswer("");
+      setInterimTranscript("");
       setFeedback(null);
 
 
@@ -313,12 +350,15 @@ const navigate = useNavigate()
 
   const submit =async ()=>{
 
-    if(!answer.trim())return;
+    const finalAnswer = composedAnswer()
+
+    if(!finalAnswer)return;
 
     setTimerActive(false)
     setLoading(true)
+    setInterimTranscript("")
 
-    const res = await submitAnswer({ interviewId: interviewData.interviewId, answer})
+    const res = await submitAnswer({ interviewId: interviewData.interviewId, answer: finalAnswer})
 
     if(res.completed){
        setFeedback(res.feedback);
@@ -342,6 +382,7 @@ const navigate = useNavigate()
       setQuestion(res.question);
       setCurrentIndex(res.currentQuestion);
       setAnswer("");
+      setInterimTranscript("");
       setFeedback(null);
 
   }
@@ -350,7 +391,7 @@ const navigate = useNavigate()
 
 
   return (
-    <div className='min-h-screen bg-white flex items-center justify-center p-3 sm:p-5'>
+    <div className='min-h-screen bg-[#F4F6FB] flex items-center justify-center p-3 sm:p-5'>
 
 
       {codeOpen && <CodeEditor onClose={()=>setCodeOpen(false)} onSubmitCode={handleSubmitCode} />}
@@ -359,10 +400,10 @@ const navigate = useNavigate()
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className='w-full max-w-5xl bg-[#0E1016] border border-white/10 rounded-2xl sm:rounded-[24px] overflow-hidden shadow-[0_0_60px_rgba(255,255,255,.03)] grid lg:grid-cols-[36%_64%]'>
+        className='w-full max-w-6xl bg-[#071123] border border-white/10 rounded-2xl sm:rounded-[28px] overflow-hidden shadow-[0_28px_90px_rgba(15,23,42,.22)] grid lg:grid-cols-[36%_64%]'>
         {/* left */}
 
-        <div className='flex flex-col border-b lg:border-b-0 lg:border-r border-white/8 p-4 sm:p-5 gap-3'>
+        <div className='flex flex-col border-b lg:border-b-0 lg:border-r border-white/8 p-4 sm:p-5 gap-3 bg-[linear-gradient(135deg,rgba(109,53,255,0.16),transparent_42%)]'>
 
           {/* Ai Video */}
           <div className='relative rounded-xl overflow-hidden bg-black aspect-video'>
@@ -375,19 +416,19 @@ const navigate = useNavigate()
               loop
               className="w-full h-full object-cover"
             />
-            {isAIPlaying && (
+            {(isAIPlaying || isListening) && (
               <div className='absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1'>
                 <div className='flex gap-0.5 items-end h-3'>
                   {[1, 2, 3].map(i => (
                     <motion.div
                       key={i}
-                      className="w-0.5 bg-white rounded-full"
+                      className={`w-0.5 rounded-full ${isAIPlaying ? "bg-white" : "bg-emerald-300"}`}
                       animate={{ height: ["4px", "12px", "4px"] }}
                       transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
                     />
                   ))}
                 </div>
-                <span className='text-[10px] text-white/80'>AI Speaking</span>
+                <span className='text-[10px] text-white/80'>{isAIPlaying ? "AI Speaking" : "Listening live"}</span>
               </div>
             )}
           </div>
@@ -476,6 +517,8 @@ const navigate = useNavigate()
             <div className='min-h-[14px] flex items-center justify-center'>
               {micOn && isAIPlaying && (
                 <span className="text-[10px] text-red-400/80">Mic paused — AI is speaking</span>)}
+              {micOn && !isAIPlaying && isListening && (
+                <span className="text-[10px] text-emerald-300/90">Live speech capture active</span>)}
             </div>
 
             <span className="text-[10px] text-white/35 text-center">
@@ -493,12 +536,21 @@ const navigate = useNavigate()
           <div className='flex items-start justify-between mb-4'>
 
             <div> 
+              <div className='mb-2 inline-flex items-center gap-1.5 rounded-full border border-[#8B5CF6]/25 bg-[#8B5CF6]/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-purple-200'>
+                <FiCpu size={11}/>
+                {interviewMode}
+              </div>
               <h2 className='text-base sm:text-lg font-semibold text-white'>
-                AI Interview
+                {interviewMode}
               </h2>
-              <div className='flex items-center gap-2 text-zinc-500 text-xs mt-0.5'>
+              <div className='flex flex-wrap items-center gap-2 text-zinc-500 text-xs mt-1'>
                 <FiClock size={11}/>
                 <span>{question.difficulty}</span>
+                <span className='rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/55'>{modeHint}</span>
+                <span className='rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/55'>{sourceLabels[questionSource] || questionSource}</span>
+                {question?.focus && (
+                  <span className='rounded-full border border-[#8B5CF6]/25 bg-[#8B5CF6]/10 px-2 py-0.5 text-[10px] text-purple-200'>{question.focus}</span>
+                )}
 
               </div>
             </div>
@@ -523,13 +575,16 @@ const navigate = useNavigate()
           <motion.div 
           initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-          className='relative overflow-hidden rounded-xl bg-[#17181E] border border-white/8 p-4 sm:p-5 mb-4'>
-            <div className='absolute inset-0 bg-gradient-to-br from-white/[0.04] via-transparent to-transparent pointer-events-none'/>
+          className='relative overflow-hidden rounded-2xl bg-[#0E1728] border border-white/8 p-4 sm:p-5 mb-4'>
+            <div className='absolute inset-0 bg-[linear-gradient(135deg,rgba(109,53,255,0.16),transparent_45%),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:auto,28px_28px,28px_28px] pointer-events-none'/>
             <div className='relative flex items-center gap-2.5 mb-3'>
-              <div className='w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center shrink-0'>
+              <div className='w-8 h-8 rounded-lg bg-white text-[#071123] flex items-center justify-center shrink-0'>
                 <FiMessageSquare size={14}/>
               </div>
-              <p className='text-xs text-zinc-500'>Question {currentIndex + 1}</p>
+              <div>
+                <p className='text-xs text-zinc-400'>Question {currentIndex + 1}</p>
+                <p className='text-[10px] text-white/35'>{questionSource === "resume" ? "Pulled from resume context first" : "Role-specific interview bank"}</p>
+              </div>
             </div>
             <p className='relative text-white text-sm sm:text-base leading-7'>
               {question.question}</p>
@@ -542,11 +597,17 @@ const navigate = useNavigate()
             <span>{currentIndex+1}/{interviewData.totalQuestions}</span>
             </div>
             <div className='w-full h-1 rounded-full bg-white/10 overflow-hidden'>
-            <div className='h-full bg-white rounded-full transition-all duration-500' style={{width: `${progress}%`}} /></div>
+            <div className='h-full bg-[#8B5CF6] rounded-full transition-all duration-500' style={{width: `${progress}%`}} /></div>
           </div>
 
           <div className='flex-1 flex flex-col min-h-0'>
-            <label className='text-xs font-medium text-zinc-400 mb-1.5'>Your Answer</label>
+            <div className='mb-1.5 flex items-center justify-between'>
+              <label className='text-xs font-medium text-zinc-400'>Your Answer</label>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${isListening && micOn && !isAIPlaying ? "bg-emerald-500/10 text-emerald-300" : "bg-white/5 text-white/35"}`}>
+                <FiRadio size={10} />
+                {isListening && micOn && !isAIPlaying ? "Listening" : "Voice standby"}
+              </span>
+            </div>
             <textarea
             onChange={(e)=>setAnswer(e.target.value)}
             value={answer}
@@ -554,6 +615,23 @@ const navigate = useNavigate()
             onKeyDown={(e)=>{if(e.ctrlKey && e.key === "Enter") submit()}}
             placeholder='Write your answer here… or speak if mic is on'
              className='flex-1 w-full rounded-xl bg-[#17181E] border border-white/8 p-4 text-sm text-white outline-none resize-none focus:border-white/25 transition placeholder-white/20'/>
+            <AnimatePresence>
+              {(interimTranscript || (isListening && micOn && !isAIPlaying)) && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 5 }}
+                  className='mt-2 rounded-xl border border-emerald-400/20 bg-emerald-400/8 px-3 py-2'>
+                  <div className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-300'>
+                    <FiMic size={11} />
+                    Live transcript
+                  </div>
+                  <p className='mt-1 min-h-[18px] text-xs leading-5 text-emerald-50/80'>
+                    {interimTranscript || "Listening... start speaking and your words will appear here instantly."}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className='mt-3 min-h-[0px]'>
@@ -584,8 +662,8 @@ const navigate = useNavigate()
           whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={submit}
-              disabled={loading || !answer.trim()}
-              className='ml-auto h-10 min-w-[150px] justify-center px-5 rounded-xl bg-white text-black text-sm font-semibold flex items-center gap-2 disabled:opacity-40 transition'
+              disabled={loading || !composedAnswer()}
+              className='ml-auto h-10 min-w-[150px] justify-center px-5 rounded-xl bg-white text-[#071123] text-sm font-semibold flex items-center gap-2 disabled:opacity-40 transition'
 
               
               >

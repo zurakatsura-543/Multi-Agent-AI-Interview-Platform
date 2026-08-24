@@ -12,12 +12,13 @@ const resourceAgent = async (state) => {
             new SystemMessage(`
 You are an expert software engineer.
 
-For every module below return the official documentation.
+For every module below return one high-quality learning article.
 
 Rules:
 
 1. Prefer official documentation.
-2. If official documentation does not exist, return the best learning article.
+2. For DSA, interview prep, CS fundamentals, DBMS, OS, CN, SQL, and coding practice, prefer GeeksforGeeks articles.
+3. For web libraries and frameworks, prefer official docs first; if the module is conceptual, GeeksforGeeks is acceptable.
 3. Return ONLY valid JSON.
 4. Do not explain anything.
 5. Keep the same title.
@@ -30,7 +31,7 @@ Return format:
     "article":""
   }
 ]
-`), new HumanMessage(`Modules: ${moduleTitles}`)
+`), new HumanMessage(`Target Role: ${state.role}\nModules: ${moduleTitles}`)
         ])
 
         let docs = [];
@@ -69,7 +70,7 @@ Return format:
 
         try {
 
-          video = await searchVideo(module.title);
+          video = await searchVideo(module.title, state.role);
 
         } catch (err) {
 
@@ -82,6 +83,8 @@ Return format:
           ...module,
 
           youtube: video?.url || "",
+          youtubeTitle: video?.title || "",
+          youtubeChannel: video?.channel || "",
 
           article:
             docsMap.get(module.title.toLowerCase()) || "",

@@ -4,7 +4,7 @@ import { FiPlus, FiTrash2 } from 'react-icons/fi'
 function Input({label, value, onChange, placeholder, type = "text"}){
     return(
         <div className='flex flex-col gap-1'>
-            <label className='text-[10px] font-semibold text-black/70 uppercase tracking-wider'>
+            <label className='text-[10px] font-bold text-[#071123]/70 uppercase tracking-wider'>
                 {label}
             </label>
             <input 
@@ -12,7 +12,7 @@ function Input({label, value, onChange, placeholder, type = "text"}){
             placeholder={placeholder}
             onChange={(e)=>onChange(e.target.value)}
             value={value}
-            className='bg-white border-2 border-black/25 text-[#0A0A0A] text-xs rounded-lg px-2.5 py-2 outline-none focus:border-black/60 transition-colors placeholder-black/30 shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+            className='bg-white border border-black/12 text-[#071123] text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[#6D35FF] focus:ring-4 focus:ring-[#6D35FF]/10 transition-all placeholder-black/30 shadow-[0_2px_8px_rgba(15,23,42,0.04)]'
             />
         </div>
     )
@@ -21,7 +21,7 @@ function Input({label, value, onChange, placeholder, type = "text"}){
 function TextArea({label, value, onChange, placeholder, rows = 3}){
     return(
         <div className='flex flex-col gap-1'>
-            <label className='text-[10px] font-semibold text-black/70 uppercase tracking-wider'>
+            <label className='text-[10px] font-bold text-[#071123]/70 uppercase tracking-wider'>
                 {label}
             </label>
             <textarea 
@@ -29,7 +29,7 @@ function TextArea({label, value, onChange, placeholder, rows = 3}){
             onChange={(e)=>onChange(e.target.value)}
             value={value}
             rows={rows}
-            className='bg-white border-2 border-black/25 text-[#0A0A0A] text-xs rounded-lg px-2.5 py-2 outline-none focus:border-black/60 transition-colors placeholder-black/30 resize-none shadow-[0_2px_8px_rgba(0,0,0,0.04)]'
+            className='bg-white border border-black/12 text-[#071123] text-xs rounded-lg px-3 py-2.5 outline-none focus:border-[#6D35FF] focus:ring-4 focus:ring-[#6D35FF]/10 transition-all placeholder-black/30 resize-none shadow-[0_2px_8px_rgba(15,23,42,0.04)]'
             />
         </div>
     )
@@ -37,7 +37,7 @@ function TextArea({label, value, onChange, placeholder, rows = 3}){
 
 function EntryCard({ children, onRemove }){
     return(
-        <div className='relative overflow-hidden bg-[#F8F9FA] border-2 border-black/15 rounded-xl p-3 shadow-[0_2px_10px_rgba(0,0,0,0.05)]'>
+        <div className='relative overflow-hidden bg-[#F8F7FF] border border-[#6D35FF]/12 rounded-xl p-3 shadow-[0_8px_24px_rgba(109,53,255,0.06)]'>
             <button onClick={onRemove}
             className='absolute top-2.5 right-2.5 z-10 text-black/35 hover:text-red-500 transition-colors'>
             <FiTrash2 size={13}/>
@@ -145,7 +145,7 @@ function ResumeForm({step , data , setData}) {
             </EntryCard>
            ))}
 
-           <button onClick={addExp} className='flex items-center justify-center gap-1.5 w-full py-2.5 border border-dashed border-black/20 rounded-xl text-xs text-black/45 hover:border-black/40 hover:text-[#0A0A0A] transition-all'>
+           <button onClick={addExp} className='flex items-center justify-center gap-1.5 w-full py-2.5 border border-dashed border-[#6D35FF]/30 rounded-xl text-xs font-semibold text-[#251855]/60 hover:border-[#6D35FF]/70 hover:text-[#251855] transition-all'>
            <FiPlus size={13} />Add Experience
            </button>
 
@@ -196,7 +196,7 @@ function ResumeForm({step , data , setData}) {
             </EntryCard>
            ))}
 
-           <button onClick={addPro} className='flex items-center justify-center gap-1.5 w-full py-2.5 border border-dashed border-black/20 rounded-xl text-xs text-black/45 hover:border-black/40 hover:text-[#0A0A0A] transition-all'>
+           <button onClick={addPro} className='flex items-center justify-center gap-1.5 w-full py-2.5 border border-dashed border-[#6D35FF]/30 rounded-xl text-xs font-semibold text-[#251855]/60 hover:border-[#6D35FF]/70 hover:text-[#251855] transition-all'>
            <FiPlus size={13} />Add Project
            </button>
 
@@ -249,7 +249,7 @@ function ResumeForm({step , data , setData}) {
             </EntryCard>
            ))}
 
-           <button onClick={addEdu} className='flex items-center justify-center gap-1.5 w-full py-2.5 border border-dashed border-black/20 rounded-xl text-xs text-black/45 hover:border-black/40 hover:text-[#0A0A0A] transition-all'>
+           <button onClick={addEdu} className='flex items-center justify-center gap-1.5 w-full py-2.5 border border-dashed border-[#6D35FF]/30 rounded-xl text-xs font-semibold text-[#251855]/60 hover:border-[#6D35FF]/70 hover:text-[#251855] transition-all'>
            <FiPlus size={13} />Add Education
            </button>
 

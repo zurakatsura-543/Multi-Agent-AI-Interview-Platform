@@ -44,6 +44,9 @@ function InterviewPage({user , setUser}) {
         currentQuestion: interview.currentQuestion,
         totalQuestions: interview.questions.length,
         question: interview.questions[interview.currentQuestion],
+        type: interview.type,
+        role: interview.role,
+        useResume: interview.useResume,
     }} user={user}    />
   )
 }

@@ -19,6 +19,26 @@ const resumeSchema = new mongoose.Schema({
       default: 0,
     },
 
+    matchScore: {
+      type: Number,
+      default: 0,
+    },
+
+    jobTitle: {
+      type: String,
+      default: "",
+    },
+
+    jobDescription: {
+      type: String,
+      default: "",
+    },
+
+    requiredExperience: {
+      type: String,
+      default: "",
+    },
+
     summary: {
       type: String,
       default: "",
@@ -77,6 +97,36 @@ const resumeSchema = new mongoose.Schema({
     suggestedRole: {
       type: String,
       default: "",
+    },
+
+    targetRole: {
+      type: String,
+      default: "",
+    },
+
+    roleFitSummary: {
+      type: String,
+      default: "",
+    },
+
+    candidateExperience: {
+      type: String,
+      default: "",
+    },
+
+    experienceFitSummary: {
+      type: String,
+      default: "",
+    },
+
+    keywordMatches: {
+      type: [String],
+      default: [],
+    },
+
+    keywordGaps: {
+      type: [String],
+      default: [],
     },
 
     recommendations: {

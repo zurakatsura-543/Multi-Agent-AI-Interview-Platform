@@ -16,8 +16,11 @@ app.get("/",(req,res)=>{
 
 app.use("/",billingRouter)
 
-app.listen(PORT , ()=>{
-    console.log(`Billing-service Started on ${PORT}`)
-    connectDB()
-    
+connectDB().then(() => {
+    app.listen(PORT , ()=>{
+        console.log(`Billing-service Started on ${PORT}`)
+    })
+}).catch((error) => {
+    console.error("Billing-service failed to start", error.message)
+    process.exit(1)
 })

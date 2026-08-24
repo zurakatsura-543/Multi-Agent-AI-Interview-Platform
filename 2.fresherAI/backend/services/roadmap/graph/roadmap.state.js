@@ -6,6 +6,10 @@ export const RoadmapState = Annotation.Root({
 
   targetPackage: Annotation,
 
+  currentLevel: Annotation,
+
+  experienceLevel: Annotation,
+
   useResume: Annotation,
 
   resume: Annotation,

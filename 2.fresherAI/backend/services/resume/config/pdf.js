@@ -1,19 +1,25 @@
 import fs from "fs"
-import {PDFParse} from "pdf-parse"
-const extractText =async (filePath)=>{
-    const buffer = fs.readFileSync(filePath)
+import { execFile } from "child_process"
+import { promisify } from "util"
 
-    const pdf = new PDFParse({
-        data:buffer
+const execFileAsync = promisify(execFile)
+
+const extractText =async (filePath)=>{
+    if (!fs.existsSync(filePath)) {
+        throw new Error("PDF file not found")
+    }
+
+    const { stdout } = await execFileAsync("pdftotext", [
+        "-layout",
+        filePath,
+        "-"
+    ], {
+        maxBuffer: 1024 * 1024 * 8
     })
 
-    const result = await pdf.getText()
-
-
-    return result.text
+    return stdout.trim()
 }
 
 export default extractText
-
 
 

@@ -11,6 +11,16 @@ const billingSchema = new mongoose.Schema({
       required: true,
     },
 
+    planId: {
+      type: String,
+      required: true,
+    },
+
+    planTitle: {
+      type: String,
+      required: true,
+    },
+
     interviewCoins: {
       type: Number,
       required: true,

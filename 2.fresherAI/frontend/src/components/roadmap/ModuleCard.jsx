@@ -1,89 +1,131 @@
-import React from 'react'
-import { useState } from 'react';
+import React, { useState } from 'react'
 import { AnimatePresence, motion } from "motion/react";
-import { FiBookOpen, FiChevronDown, FiChevronUp, FiClock, FiYoutube } from 'react-icons/fi';
+import { FiBookOpen, FiCheck, FiChevronDown, FiChevronUp, FiClock, FiFlag, FiYoutube } from 'react-icons/fi';
 
-const difficultyColor = { Easy: "#34d399", Medium: "#a78bfa", Hard: "#f87171" };
-function ModuleCard({ mod, index }) {
-    const [open, setOpen] = useState(false);
-  return (
-    <motion.div 
-     initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06, duration: 0.35 }}
-      whileHover={{ y: -2 }}
-      onClick={()=>setOpen(!open)}
-    className='relative overflow-hidden bg-[#000000]/90 backdrop-blur-2xl border border-white/10 rounded-xl cursor-pointer select-none shadow-[0_4px_18px_rgba(0,0,0,0.2)] hover:border-white/20 transition-all'>
-        <div className='absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-transparent pointer-events-none'/>
+const difficultyColor = {
+    Easy: "text-emerald-500 bg-emerald-50 border-emerald-100",
+    Medium: "text-[#6D35FF] bg-[#F4F0FF] border-[#6D35FF]/15",
+    Hard: "text-rose-500 bg-rose-50 border-rose-100",
+};
 
-        <div className='relative flex items-center gap-3 p-4'>
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold bg-white/5 border border-white/10"
-          style={{ color: difficultyColor[mod.difficulty] }}>{index + 1}</div>
+function ModuleCard({ mod, index, done, onToggle }) {
+    const [open, setOpen] = useState(index === 0);
 
-            <div className='flex-1 min-w-0'>
-                <p className='text-sm font-medium text-white truncate'>{mod.title}</p>
-                <div className='flex items-center gap-1.5 mt-0.5'>
-                    <FiClock size={10} className="text-white/30"/>
-                    <span className='text-xs text-white/35'>{mod.duration}</span>
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.04, duration: 0.28 }}
+            className={`relative overflow-hidden rounded-2xl border bg-white shadow-[0_14px_38px_rgba(15,23,42,0.06)] transition-all ${done ? "border-emerald-200" : "border-black/8 hover:border-[#6D35FF]/25"}`}>
+            <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setOpen(!open)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setOpen(!open);
+                    }
+                }}
+                className='relative flex w-full items-center gap-3 p-4 text-left'>
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggle();
+                    }}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm font-black transition ${done ? "border-emerald-200 bg-emerald-50 text-emerald-600" : "border-[#6D35FF]/15 bg-[#F8F7FF] text-[#6D35FF]"}`}>
+                    {done ? <FiCheck size={16} /> : index + 1}
+                </button>
+
+                <div className='min-w-0 flex-1'>
+                    <div className='flex flex-wrap items-center gap-2'>
+                        <p className='text-sm font-black text-[#071123]'>{mod.title}</p>
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-black ${difficultyColor[mod.difficulty] || difficultyColor.Medium}`}>
+                            {mod.difficulty}
+                        </span>
+                    </div>
+                    <div className='mt-1 flex flex-wrap items-center gap-3 text-[11px] text-black/40'>
+                        <span className='flex items-center gap-1'><FiClock size={11} /> Week {mod.week || index + 1}</span>
+                        <span>{mod.duration}</span>
+                    </div>
                 </div>
+
+                {open
+                    ? <FiChevronUp size={16} className="text-black/35" />
+                    : <FiChevronDown size={16} className="text-black/35" />
+                }
             </div>
 
-            <div className='flex items-center gap-2'>
-                <span className="text-xs font-medium hidden sm:block" style={{ color: difficultyColor[mod.difficulty] }}>
-            {mod.difficulty}
-          </span>
-          {open
-            ? <FiChevronUp size={14} className="text-white/30" />
-            : <FiChevronDown size={14} className="text-white/30" />
-          }
-            </div>
-        </div>
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className='overflow-hidden'>
+                        <div className='border-t border-black/8 px-4 pb-4 pt-3'>
+                            <p className='text-xs leading-5 text-black/55'>{mod.description}</p>
 
+                            {mod.gapAddressed && (
+                                <div className='mt-3 rounded-xl border border-[#6D35FF]/12 bg-[#F8F7FF] p-3'>
+                                    <p className='flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#6D35FF]'>
+                                        <FiFlag size={11} /> Gap Addressed
+                                    </p>
+                                    <p className='mt-1 text-xs leading-5 text-black/55'>{mod.gapAddressed}</p>
+                                </div>
+                            )}
 
-        <AnimatePresence>
-            {open && (
-                <motion.div
-                initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22 }}
-                 className='overflow-hidden'>
-                    <div className='relative px-4 pb-4 pt-0 border-t border-white/8'>
-                    
-                    <p className='text-xs text-white/45 mt-3 mb-3 leading-relaxed'>{mod.description}</p>
-                    <div className='flex gap-2 flex-wrap'>
+                            {Array.isArray(mod.outcomes) && Boolean(mod.outcomes.length) && (
+                                <div className='mt-3 grid gap-1.5 sm:grid-cols-2'>
+                                    {mod.outcomes.map((outcome) => (
+                                        <div key={outcome} className='flex items-start gap-2 text-xs text-black/55'>
+                                            <span className='mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600'>
+                                                <FiCheck size={10} />
+                                            </span>
+                                            <span>{outcome}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                        <a href={mod.youtube} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                            <motion.button 
-                            whileHover={{ scale: 1.03 }} 
-                            whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-red-500/25 text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors">
-                        <FiYoutube size={12}/> Watch Tutorial
+                            {mod.projectTask && (
+                                <div className='mt-3 rounded-xl border border-black/8 bg-[#F9FAFB] p-3'>
+                                    <p className='text-[10px] font-black uppercase tracking-widest text-black/35'>Practice Task</p>
+                                    <p className='mt-1 text-xs leading-5 text-black/60'>{mod.projectTask}</p>
+                                </div>
+                            )}
 
-                            </motion.button>
+                            <div className='mt-3 flex flex-wrap gap-2'>
+                                {mod.youtube && (
+                                    <a href={mod.youtube} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                        <motion.button
+                                            whileHover={{ scale: 1.03 }}
+                                            whileTap={{ scale: 0.97 }}
+                                            className="flex items-center gap-1.5 rounded-lg border border-red-500/20 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 transition-colors hover:bg-red-100">
+                                            <FiYoutube size={12} /> {mod.youtubeChannel || "Watch Video"}
+                                        </motion.button>
+                                    </a>
+                                )}
 
-                        </a>
-
-                        <a href={mod.article} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                            <motion.button 
-                            whileHover={{ scale: 1.03 }} 
-                            whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border  border-white/10 text-white/45 bg-white/5 hover:bg-white/10 transition-colors">
-                        <FiBookOpen size={12}/> Read Article
-
-                            </motion.button>
-
-                        </a>
-                    </div>
-                    
-                    </div>
-
-                </motion.div>
-            )}
-        </AnimatePresence>
-      
-    </motion.div>
-  )
+                                {mod.article && (
+                                    <a href={mod.article} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                        <motion.button
+                                            whileHover={{ scale: 1.03 }}
+                                            whileTap={{ scale: 0.97 }}
+                                            className="flex items-center gap-1.5 rounded-lg border border-[#6D35FF]/15 bg-[#F8F7FF] px-3 py-1.5 text-xs font-bold text-[#6D35FF] transition-colors hover:bg-[#F1EDFF]">
+                                            <FiBookOpen size={12} /> Read Article
+                                        </motion.button>
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </motion.div>
+    )
 }
 
 export default ModuleCard
