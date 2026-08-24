@@ -26,6 +26,12 @@ ${state.role}
 Target Package:
 ${state.targetPackage}
 
+Current Skill Level:
+${state.currentLevel || "Not provided"}
+
+Experience Level:
+${state.experienceLevel || "Not provided"}
+
 Resume:
 ${JSON.stringify(resume, null, 2)}
 

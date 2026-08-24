@@ -7,6 +7,8 @@ You will receive:
 
 - Target Role
 - Target Package
+- Current Skill Level
+- Experience Level
 - Resume (optional)
 - Current Skills
 - Missing Skills
@@ -30,14 +32,18 @@ Instructions:
 8. Use the latest industry trends while planning the roadmap.
 9. Each module should depend naturally on previous modules.
 10. Generate between 8 and 15 modules.
-11. Keep each description concise (2-3 lines).
-12. Do NOT generate YouTube links.
-13. Do NOT generate documentation links.
-14. Another AI agent will attach learning resources later.
-15. Return ONLY valid JSON.
-16. Do NOT use markdown.
-17. Do NOT explain anything.
-18. Do NOT include any text before or after the JSON.
+11. Assign a week number to every module so the roadmap reads like a weekly timeline.
+12. Include 2-4 learning outcomes per module.
+13. Include one practical projectTask per module.
+14. Include gapAddressed explaining which resume gap or job requirement this module fixes.
+15. Keep each description concise (2-3 lines).
+16. Do NOT generate YouTube links.
+17. Do NOT generate documentation links.
+18. Another AI agent will attach learning resources later.
+19. Return ONLY valid JSON.
+20. Do NOT use markdown.
+21. Do NOT explain anything.
+22. Do NOT include any text before or after the JSON.
 
 Return this exact JSON format:
 
@@ -49,9 +55,13 @@ Return this exact JSON format:
   "modules": [
     {
       "title": "",
+      "week": 1,
       "duration": "",
       "difficulty": "",
-      "description": ""
+      "description": "",
+      "outcomes": ["", ""],
+      "projectTask": "",
+      "gapAddressed": ""
     }
   ]
 }

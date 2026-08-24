@@ -1,12 +1,24 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages"
 import llm from "../config/llm.js"
 
-export const resumeAgent = async (resumeText) => {
+export const resumeAgent = async (resumeText, target = {}) => {
+    const jobTitle = target.jobTitle || "";
+    const jobDescription = target.jobDescription || "";
+    const requiredExperience = target.requiredExperience || "";
     const response = await llm.invoke([
         new SystemMessage(`
-You are an Expert ATS Resume Analyzer.
+You are an Expert ATS Resume Analyzer and Job Description Match Scorer.
 
-Analyze the given resume.
+Analyze the given resume against the target role, required experience, and job description.
+
+Target Job Title:
+${jobTitle || "Not provided"}
+
+Required Experience:
+${requiredExperience || "Not provided"}
+
+Target Job Description:
+${jobDescription || "Not provided"}
 
 Extract the following information:
 
@@ -23,6 +35,13 @@ Extract the following information:
 - Missing Skills
 - Suggested Job Role
 - ATS Score (0-100)
+- Job Match Score (0-100)
+- Keyword Matches
+- Keyword Gaps
+- Role Fit Summary
+- Required Experience
+- Candidate Experience
+- Experience Fit Summary
 - Recommendations
 
 IMPORTANT RULES:
@@ -34,6 +53,10 @@ IMPORTANT RULES:
 5. Every field must exist.
 6. Array fields must be arrays of strings only.
 7. Do not return objects inside arrays.
+8. If job title or job description is provided, score primarily based on role fit, relevant skills, project alignment, experience alignment, and missing JD keywords.
+9. Experience fit matters strongly. Estimate candidate experience from resume dates, work history, internships, projects, and seniority signals.
+10. If the required experience is higher than the candidate experience, reduce matchScore and clearly mention the experience gap in experienceFitSummary and weaknesses.
+11. If job description is not provided, make matchScore equal to score and keep keywordMatches/keywordGaps based on the suggested role.
 
 Response Format:
 
@@ -51,6 +74,14 @@ Response Format:
   "missingSkills":["Docker"],
   "suggestedRole":"",
   "score":0,
+  "matchScore":0,
+  "targetRole":"",
+  "roleFitSummary":"",
+  "requiredExperience":"",
+  "candidateExperience":"",
+  "experienceFitSummary":"",
+  "keywordMatches":["React"],
+  "keywordGaps":["Docker"],
   "recommendations":["Add measurable project impact"]
 }
 `),

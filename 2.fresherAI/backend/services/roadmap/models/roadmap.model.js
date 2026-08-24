@@ -11,6 +11,11 @@ const moduleSchema = new mongoose.Schema({
         required: true,
     },
 
+    week: {
+        type: Number,
+        default: 1,
+    },
+
     difficulty: {
         type: String,
         enum: ["Easy", "Medium", "Hard"],
@@ -28,6 +33,31 @@ const moduleSchema = new mongoose.Schema({
     },
 
     article: {
+        type: String,
+        default: "",
+    },
+
+    youtubeTitle: {
+        type: String,
+        default: "",
+    },
+
+    youtubeChannel: {
+        type: String,
+        default: "",
+    },
+
+    outcomes: {
+        type: [String],
+        default: [],
+    },
+
+    projectTask: {
+        type: String,
+        default: "",
+    },
+
+    gapAddressed: {
         type: String,
         default: "",
     },

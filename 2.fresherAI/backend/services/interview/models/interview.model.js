@@ -83,6 +83,17 @@ const questionSchema = new mongoose.Schema(
             default: 60,
         },
 
+        source: {
+            type: String,
+            enum: ["resume", "general", "coding", "scenario", "behavioral"],
+            default: "general",
+        },
+
+        focus: {
+            type: String,
+            default: "",
+        },
+
         feedback: {
             type: feedbackSchema,
             default: () => ({}),

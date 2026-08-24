@@ -38,13 +38,21 @@ const normalizeResumeData = (data) => ({
     strengths: toStringArray(data.strengths),
     weaknesses: toStringArray(data.weaknesses),
     missingSkills: toStringArray(data.missingSkills),
+    keywordMatches: toStringArray(data.keywordMatches),
+    keywordGaps: toStringArray(data.keywordGaps),
     recommendations: toStringArray(data.recommendations),
     score: Number(data.score) || 0,
+    matchScore: Number(data.matchScore) || Number(data.score) || 0,
     name: data.name || "",
     email: data.email || "",
     phone: data.phone || "",
     summary: data.summary || "",
     suggestedRole: data.suggestedRole || "",
+    targetRole: data.targetRole || "",
+    roleFitSummary: data.roleFitSummary || "",
+    requiredExperience: data.requiredExperience || "",
+    candidateExperience: data.candidateExperience || "",
+    experienceFitSummary: data.experienceFitSummary || "",
 })
 
 
@@ -59,6 +67,9 @@ export const uploadResume = async (req,res) => {
             })
         }
         const userId = req.headers["x-user-id"];
+        const jobTitle = req.body?.jobTitle || "";
+        const jobDescription = req.body?.jobDescription || "";
+        const requiredExperience = req.body?.requiredExperience || "";
 
           if(!userId){
             return res.status(400).json({
@@ -69,16 +80,30 @@ export const uploadResume = async (req,res) => {
 
         const resumeText = await extractText(file.path)
 
-        const aiResponse = await resumeAgent(resumeText)
+        const aiResponse = await resumeAgent(resumeText, {
+            jobTitle,
+            jobDescription,
+            requiredExperience
+        })
 
-        const resumeData = normalizeResumeData(JSON.parse(aiResponse))
+        const parsedResponse = JSON.parse(aiResponse)
+        const resumeData = normalizeResumeData({
+            ...parsedResponse,
+            targetRole: jobTitle || parsedResponse.targetRole || "",
+            jobTitle,
+            jobDescription,
+            requiredExperience,
+        })
 
         let resume = await Resume.findOne({userId})
 
         if(resume){
             Object.assign(resume,{
                 ...resumeData,
-                extractedText:resumeText
+                extractedText:resumeText,
+                jobTitle,
+                jobDescription,
+                requiredExperience
 
             }    
             )
@@ -87,6 +112,9 @@ export const uploadResume = async (req,res) => {
             resume = await Resume.create({
                 userId,
                 extractedText:resumeText,
+                jobTitle,
+                jobDescription,
+                requiredExperience,
                 ...resumeData
             })
         }

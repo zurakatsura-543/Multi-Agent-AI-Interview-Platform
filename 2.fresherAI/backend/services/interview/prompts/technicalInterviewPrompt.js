@@ -58,6 +58,8 @@ Each object must contain ONLY:
 - question
 - difficulty
 - timer
+- source
+- focus
 
 Difficulty must be ONLY:
 
@@ -133,7 +135,16 @@ Data Science
 
 etc.
 
-Resume should influence the questions if available.
+If resume is available:
+
+- Q1 and Q2 must be resume-based.
+- Ask about actual projects, skills, missing skills, weaknesses, or recommendations from the resume.
+- Mark source as "resume".
+
+If resume is not available:
+
+- Q1 and Q2 should be role-specific fundamentals.
+- Mark source as "general".
 
 =========================
 Question 5 & Question 6
@@ -158,6 +169,8 @@ Generate CODING questions.
 Coding is ONLY a question type.
 
 Difficulty remains HARD.
+
+Mark source as "coding".
 
 The question should be solvable during a live interview.
 
@@ -201,6 +214,8 @@ If the candidate belongs to ANY NON-CODING role such as
 Generate PRACTICAL ROLE-SPECIFIC interview questions.
 
 These should simulate real interview scenarios.
+
+Mark source as "scenario".
 
 Examples
 
@@ -293,12 +308,16 @@ Example
   {
     "question":"Explain event loop.",
     "difficulty":"easy",
-    "timer":90
+    "timer":90,
+    "source":"general",
+    "focus":"JavaScript runtime"
   },
   {
     "question":"Implement an LRU Cache.",
     "difficulty":"hard",
-    "timer":1200
+    "timer":1200,
+    "source":"coding",
+    "focus":"Data structures"
   }
 ]
 

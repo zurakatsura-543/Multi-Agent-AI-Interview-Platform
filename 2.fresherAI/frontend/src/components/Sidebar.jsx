@@ -1,9 +1,10 @@
 import React from 'react'
 import { AnimatePresence, motion } from "motion/react"
-import { GiArtificialHive, GiTwoCoins } from 'react-icons/gi'
+import { GiTwoCoins } from 'react-icons/gi'
 import { FiFileText, FiLogOut, FiMap, FiPlus, FiSidebar, FiStar } from 'react-icons/fi'
 import { useNavigate } from "react-router-dom"
 import { FaCirclePlus } from "react-icons/fa6";
+import BrandMark from './BrandMark';
 
 const NAV_ITEMS = [
     {
@@ -44,12 +45,11 @@ function Sidebar({
                 }`}>
                 {sidebarOpen && (
                     <div className='flex items-center gap-2.5'>
-                        <div className='w-7 h-7 rounded-lg bg-[#000000] flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(0,0,0,0.25)]'><GiArtificialHive size={19} color='white' /></div>
                         <motion.span
                             initial={{ opacity: 0, x: -6 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.15 }}
-                            className='font-extrabold text-sm tracking-tight text-[#0A0A0A] whitespace-nowrap'>FresherAI</motion.span>
+                            className='whitespace-nowrap'><BrandMark compact /></motion.span>
 
                     </div>
                 )}
@@ -81,7 +81,7 @@ function Sidebar({
                     onClick={onNewInterview}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
-                    className={`w-full flex items-center gap-2 bg-[#000000] text-white font-semibold rounded-lg py-2 transition-all shadow-[0_4px_14px_rgba(0,0,0,0.25)] cursor-pointer hover:bg-[#1a1a1a] ${sidebarOpen ? "px-2.5 " : "justify-center px-0"
+                    className={`w-full flex items-center gap-2 bg-[#0B1630] text-white font-semibold rounded-lg py-2 transition-all shadow-[0_8px_22px_rgba(109,53,255,0.22)] cursor-pointer hover:bg-[#251855] ${sidebarOpen ? "px-2.5 " : "justify-center px-0"
                         }`}>
                     <FiPlus size={14} className='shrink-0' />
                     <AnimatePresence>
@@ -145,7 +145,7 @@ function Sidebar({
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.13 }}
                             onClick={() => navigate("/billing")}
-                            className='group flex cursor-pointer items-center justify-between gap-2.5 rounded-lg border border-white/10 bg-[#000000]/90 backdrop-blur-2xl px-2.5 py-1.5 mb-2.5 transition-all hover:border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.2)]'>
+                            className='group flex cursor-pointer items-center justify-between gap-2.5 rounded-lg border border-[#6D35FF]/20 bg-[#0B1630] backdrop-blur-2xl px-2.5 py-1.5 mb-2.5 transition-all hover:border-[#6D35FF]/45 shadow-[0_8px_24px_rgba(109,53,255,0.18)]'>
                             <div className='flex items-center gap-1.5'>
                                 <GiTwoCoins size={15} className='text-yellow-500 shrink-0' />
 
@@ -164,7 +164,7 @@ function Sidebar({
                 </AnimatePresence>
 
                 <div className={`flex items-center gap-2 ${sidebarOpen ? "" : "justify-center"}`}>
-                    <div className='w-7 h-7 rounded-full bg-[#000000] flex items-center justify-center shrink-0'>
+                    <div className='w-7 h-7 rounded-full bg-[#0B1630] flex items-center justify-center shrink-0'>
                         <span className='text-white font-bold text-[10px]'>
                             {avatar}
 

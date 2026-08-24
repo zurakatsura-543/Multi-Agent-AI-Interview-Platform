@@ -2,11 +2,12 @@ import React from 'react'
 import { FiDownload } from 'react-icons/fi'
 import { useReactToPrint } from "react-to-print";
 import { useCoins } from '../../apis/user.api';
+import { BRAND_SHORT } from '../../utils/brand';
 function DownloadBtn({ docRef, user, setUser }) {
 
     const handlePdf = useReactToPrint({
         contentRef: docRef,
-        documentTitle: "FresherAIPDF"
+        documentTitle: `${BRAND_SHORT}PDF`
     })
 
     const handleDownload = async () => {

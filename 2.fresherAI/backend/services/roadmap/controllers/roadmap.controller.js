@@ -9,6 +9,8 @@ export const generateRoadmap =async (req,res)=> {
         const {
             role,
       targetPackage,
+      currentLevel,
+      experienceLevel,
       useResume = false,
       resume,} = req.body;
 
@@ -30,6 +32,8 @@ export const generateRoadmap =async (req,res)=> {
       const result = await graph.invoke({
         role,
       targetPackage,
+      currentLevel,
+      experienceLevel,
       useResume,
       resume,
       })
