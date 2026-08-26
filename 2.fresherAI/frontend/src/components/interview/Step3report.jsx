@@ -1,11 +1,18 @@
 import React, { useRef } from 'react'
 import { motion } from "motion/react"
-import { FiArrowLeft, FiAward, FiCheck, FiTarget, FiTrendingUp, FiX } from 'react-icons/fi'
+import { FiAlertTriangle, FiArrowLeft, FiAward, FiCheck, FiFileText, FiShield, FiTarget, FiTrendingUp, FiX } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import DownloadBtn from '../resume/DownloadBtn'
 function Step3report({ report, user, setUser }) {
   const navigate = useNavigate()
   const reportRef = useRef(null)
+  const evidenceQuestions = report.questions?.filter((item) => item.evidence?.jdRequirement || item.evidence?.resumeEvidence || item.evidence?.testedGap) || []
+  const averageJdAlignment = report.averageJdAlignment || Math.round(
+    evidenceQuestions.reduce((sum, item) => sum + (item.feedback?.jdAlignment || 0), 0) / (evidenceQuestions.length || 1)
+  )
+  const readinessScore = report.readinessScore || report.overallScore || 0
+  const groundednessRisk = report.groundednessRisk || "not_applicable"
+
   return (
     <div className='min-h-screen bg-white flex items-center justify-center md:p-5'>
 
@@ -96,6 +103,96 @@ function Step3report({ report, user, setUser }) {
               {report.summary}
             </p>
 
+          </div>
+
+          <div className='mt-6 rounded-2xl bg-[#071123] border border-[#8B5CF6]/20 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.16)]'>
+            <div className='flex flex-wrap items-start justify-between gap-4'>
+              <div>
+                <p className='text-[11px] font-black uppercase tracking-widest text-[#A78BFA]'>Resume-JD Readiness</p>
+                <h3 className='mt-2 text-xl font-bold text-white'>Role readiness after this interview</h3>
+                <p className='mt-2 max-w-2xl text-sm leading-6 text-zinc-400'>
+                  {report.evidenceCoverageSummary || (evidenceQuestions.length ? "Your answers were reviewed against retrieved resume-JD evidence." : "No resume-JD evidence was used for this interview.")}
+                </p>
+              </div>
+
+              <div className='rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-right'>
+                <p className='text-[11px] uppercase tracking-widest text-zinc-500'>Readiness</p>
+                <h2 className='mt-1 text-4xl font-black text-white'>
+                  {readinessScore}
+                  <span className='text-lg text-zinc-500'>/100</span>
+                </h2>
+              </div>
+            </div>
+
+            <div className='mt-5 grid gap-3 md:grid-cols-3'>
+              <div className='rounded-2xl border border-white/10 bg-white/[0.04] p-4'>
+                <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400/10 text-emerald-300'>
+                  <FiTarget size={17} />
+                </div>
+                <p className='mt-4 text-xs text-zinc-500'>Average JD Alignment</p>
+                <h4 className='mt-1 text-2xl font-bold text-white'>{averageJdAlignment}/100</h4>
+              </div>
+
+              <div className='rounded-2xl border border-white/10 bg-white/[0.04] p-4'>
+                <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-purple-400/10 text-purple-200'>
+                  <FiFileText size={17} />
+                </div>
+                <p className='mt-4 text-xs text-zinc-500'>Evidence Questions</p>
+                <h4 className='mt-1 text-2xl font-bold text-white'>{evidenceQuestions.length}/{report.questions?.length || 0}</h4>
+              </div>
+
+              <div className='rounded-2xl border border-white/10 bg-white/[0.04] p-4'>
+                <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/10 text-amber-200'>
+                  <FiShield size={17} />
+                </div>
+                <p className='mt-4 text-xs text-zinc-500'>Groundedness Risk</p>
+                <h4 className='mt-1 text-2xl font-bold capitalize text-white'>{groundednessRisk.replace("_", " ")}</h4>
+              </div>
+            </div>
+
+            <div className='mt-5 grid gap-5 lg:grid-cols-3'>
+              <div>
+                <div className='flex items-center gap-2 text-sm font-semibold text-white'>
+                  <FiCheck className='text-emerald-300' />
+                  Strong Matches
+                </div>
+                <div className='mt-3 space-y-2'>
+                  {(report.strongestMatchedSkills?.length ? report.strongestMatchedSkills : report.strengths?.slice(0, 3))?.map((item) => (
+                    <div key={item} className='rounded-xl border border-emerald-300/15 bg-emerald-300/8 px-3 py-2 text-xs leading-5 text-emerald-50/80'>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className='flex items-center gap-2 text-sm font-semibold text-white'>
+                  <FiAlertTriangle className='text-amber-200' />
+                  Weak JD Gaps
+                </div>
+                <div className='mt-3 space-y-2'>
+                  {(report.weakestJdGaps?.length ? report.weakestJdGaps : report.weaknesses?.slice(0, 3))?.map((item) => (
+                    <div key={item} className='rounded-xl border border-amber-300/15 bg-amber-300/8 px-3 py-2 text-xs leading-5 text-amber-50/80'>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className='flex items-center gap-2 text-sm font-semibold text-white'>
+                  <FiTrendingUp className='text-purple-200' />
+                  Next Practice
+                </div>
+                <div className='mt-3 space-y-2'>
+                  {(report.nextPracticePlan?.length ? report.nextPracticePlan : report.recommendations?.slice(0, 5))?.map((item) => (
+                    <div key={item} className='rounded-xl border border-purple-300/15 bg-purple-300/8 px-3 py-2 text-xs leading-5 text-purple-50/80'>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className='grid lg:grid-cols-2 gap-5 mt-6'>
@@ -247,6 +344,57 @@ function Step3report({ report, user, setUser }) {
                       
                       </div>
                     </div>
+
+                    {item.feedback?.evidenceCoverage && item.feedback.evidenceCoverage !== "not_applicable" && (
+                      <div className='mt-4 grid gap-3 md:grid-cols-3'>
+                        <div className='rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-3.5'>
+                          <p className='text-xs text-emerald-200/70'>Evidence Coverage</p>
+                          <h5 className='mt-2 text-lg font-bold capitalize text-white'>
+                            {item.feedback.evidenceCoverage}
+                          </h5>
+                        </div>
+
+                        <div className='rounded-xl border border-purple-300/15 bg-purple-300/5 p-3.5'>
+                          <p className='text-xs text-purple-100/70'>JD Alignment</p>
+                          <h5 className='mt-2 text-lg font-bold text-white'>
+                            {item.feedback.jdAlignment ?? 0}/100
+                          </h5>
+                        </div>
+
+                        <div className='rounded-xl border border-amber-300/15 bg-amber-300/5 p-3.5'>
+                          <p className='text-xs text-amber-100/70'>Groundedness Risk</p>
+                          <h5 className='mt-2 text-lg font-bold capitalize text-white'>
+                            {item.feedback.groundednessRisk || "not_applicable"}
+                          </h5>
+                        </div>
+                      </div>
+                    )}
+
+                    {(item.evidence?.jdRequirement || item.evidence?.resumeEvidence || item.evidence?.testedGap) && (
+                      <div className='mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4'>
+                        <p className='text-[11px] uppercase tracking-widest text-zinc-500'>Retrieved Evidence Used</p>
+                        <div className='mt-3 grid gap-3 md:grid-cols-2'>
+                          {item.evidence?.jdRequirement && (
+                            <div className='rounded-lg bg-black/20 p-3'>
+                              <p className='text-[10px] uppercase tracking-widest text-zinc-500'>JD Requirement</p>
+                              <p className='mt-1.5 text-xs leading-5 text-zinc-300'>{item.evidence.jdRequirement}</p>
+                            </div>
+                          )}
+                          {item.evidence?.resumeEvidence && (
+                            <div className='rounded-lg bg-black/20 p-3'>
+                              <p className='text-[10px] uppercase tracking-widest text-zinc-500'>Resume Evidence</p>
+                              <p className='mt-1.5 text-xs leading-5 text-zinc-300'>{item.evidence.resumeEvidence}</p>
+                            </div>
+                          )}
+                        </div>
+                        {item.evidence?.testedGap && (
+                          <div className='mt-3 rounded-lg border border-amber-300/15 bg-amber-300/5 p-3'>
+                            <p className='text-[10px] uppercase tracking-widest text-amber-100/60'>Tested Gap</p>
+                            <p className='mt-1.5 text-xs leading-5 text-amber-50/75'>{item.evidence.testedGap}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <div className='mt-6 rounded-xl border border-green-500/20 bg-green-500/5 p-4.5'>
                     <p className='text-[11px] uppercase tracking-widest text-green-400'>AI Feedback</p>

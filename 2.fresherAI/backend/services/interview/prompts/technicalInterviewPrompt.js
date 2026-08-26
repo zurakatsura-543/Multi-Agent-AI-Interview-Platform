@@ -2,6 +2,7 @@ const technicalInterviewPrompt = ({
   role,
   useResume,
   resume,
+  ragEvidencePack = "",
 }) => `
 
 You are a Senior Technical Interviewer.
@@ -21,7 +22,7 @@ ${useResume ? "YES" : "NO"}
 ${
 useResume
 ? `
-Resume
+Resume Intelligence
 
 Summary:
 ${resume?.summary}
@@ -43,6 +44,14 @@ ${resume?.missingSkills?.join(", ")}
 
 Recommendations:
 ${resume?.recommendations?.join(", ")}
+
+Target Job Description:
+${resume?.jobDescription || "Not provided"}
+
+Required Experience:
+${resume?.requiredExperience || "Not provided"}
+
+${ragEvidencePack || "No ranked RAG evidence available. Use the resume summary, skills, gaps, and recommendations only."}
 `
 : ""
 }
@@ -137,14 +146,18 @@ etc.
 
 If resume is available:
 
-- Q1 and Q2 must be resume-based.
-- Ask about actual projects, skills, missing skills, weaknesses, or recommendations from the resume.
+- Q1 and Q2 must be resume-based and must use the RAG Evidence Pack first when available.
+- Q1 should ask a deep-dive from a strong matched resume/JD evidence pair.
+- Q2 should ask about one uncovered or weak JD skill gap and connect it to the target role.
+- Ask about actual projects, skills, missing skills, weaknesses, recommendations, or retrieved evidence from the resume.
 - Mark source as "resume".
+- Do not invent companies, projects, tools, years of experience, or achievements that are not present in the supplied resume/RAG evidence.
 
 If resume is not available:
 
 - Q1 and Q2 should be role-specific fundamentals.
 - Mark source as "general".
+- Do not reference the candidate's resume, projects, gaps, previous work, or uploaded profile.
 
 =========================
 Question 5 & Question 6

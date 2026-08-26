@@ -27,6 +27,8 @@ export async function feedbackNode(state) {
 
         difficulty: state.difficulty,
 
+        evidence: state.evidence,
+
     })
 
     return {

@@ -57,6 +57,57 @@ const feedbackSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
+
+        evidenceCoverage: {
+            type: String,
+            enum: ["not_applicable", "weak", "partial", "strong"],
+            default: "not_applicable",
+        },
+
+        jdAlignment: {
+            type: Number,
+            default: 0,
+        },
+
+        groundednessRisk: {
+            type: String,
+            enum: ["not_applicable", "low", "medium", "high"],
+            default: "not_applicable",
+        },
+    },
+    { _id: false }
+);
+
+const questionEvidenceSchema = new mongoose.Schema(
+    {
+        type: {
+            type: String,
+            default: "",
+        },
+        title: {
+            type: String,
+            default: "",
+        },
+        jdRequirement: {
+            type: String,
+            default: "",
+        },
+        resumeEvidence: {
+            type: String,
+            default: "",
+        },
+        testedGap: {
+            type: String,
+            default: "",
+        },
+        retrievalMethod: {
+            type: String,
+            default: "",
+        },
+        signals: {
+            type: [String],
+            default: [],
+        },
     },
     { _id: false }
 );
@@ -92,6 +143,11 @@ const questionSchema = new mongoose.Schema(
         focus: {
             type: String,
             default: "",
+        },
+
+        evidence: {
+            type: questionEvidenceSchema,
+            default: () => ({}),
         },
 
         feedback: {
@@ -158,6 +214,42 @@ const interviewSchema = new mongoose.Schema(
         summary: {
             type: String,
             default: "",
+        },
+
+        readinessScore: {
+            type: Number,
+            default: 0,
+        },
+
+        evidenceCoverageSummary: {
+            type: String,
+            default: "",
+        },
+
+        averageJdAlignment: {
+            type: Number,
+            default: 0,
+        },
+
+        groundednessRisk: {
+            type: String,
+            enum: ["not_applicable", "low", "medium", "high"],
+            default: "not_applicable",
+        },
+
+        strongestMatchedSkills: {
+            type: [String],
+            default: [],
+        },
+
+        weakestJdGaps: {
+            type: [String],
+            default: [],
+        },
+
+        nextPracticePlan: {
+            type: [String],
+            default: [],
         },
 
         status: {

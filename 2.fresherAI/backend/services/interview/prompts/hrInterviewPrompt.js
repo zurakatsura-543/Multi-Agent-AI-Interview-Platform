@@ -2,6 +2,7 @@ const hrInterviewPrompt = ({
   role,
   useResume,
   resume,
+  ragEvidencePack = "",
 }) => `
 
 You are a Senior HR Interviewer with 15+ years of experience.
@@ -24,7 +25,7 @@ ${useResume ? "YES" : "NO"}
 ${
 useResume
 ? `
-Resume
+Resume Intelligence
 
 Summary:
 ${resume?.summary}
@@ -46,6 +47,14 @@ ${resume?.missingSkills?.join(", ")}
 
 Recommendations:
 ${resume?.recommendations?.join(", ")}
+
+Target Job Description:
+${resume?.jobDescription || "Not provided"}
+
+Required Experience:
+${resume?.requiredExperience || "Not provided"}
+
+${ragEvidencePack || "No ranked RAG evidence available. Use the resume summary, strengths, weaknesses, gaps, and recommendations only."}
 `
 : ""
 }
@@ -104,13 +113,19 @@ personalize questions using:
 - experience
 - strengths
 - weaknesses
+- RAG evidence and uncovered JD gaps, but only for HR-style behavior, learning, ownership, communication, confidence, and growth questions
 
 Q1 and Q2 must directly reference the candidate resume, project, experience, strength, weakness, or recommendation.
+If RAG evidence is available, Q1 should use a matched resume/JD evidence pair and Q2 should use a gap or weaker requirement.
 Even when referencing technical gaps, ask HR-style questions only.
 For example, ask how the candidate communicates a skill gap, plans learning, handles uncertainty, prioritizes growth, or collaborates with stronger team members.
 Do NOT ask "explain", "implement", "design", "debug", "optimize", "what steps technically", or "how would you build".
 Mark resume-personalized questions with source "resume".
 Mark general HR questions with source "behavioral".
+
+If resume is not available:
+- Ask role-relevant HR and behavioral questions only.
+- Do not reference resume, projects, uploaded profile, gaps, or previous experience unless the candidate volunteers them in the answer.
 
 Every question must sound like it is asked by an HR manager or people interviewer.
 

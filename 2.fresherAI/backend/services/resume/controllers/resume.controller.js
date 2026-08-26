@@ -3,9 +3,13 @@
 // pdf  ---->  pdf Storage  ---> text ---> llm ---> agent ---> promt ---> data ---> save mongoDb ---> redis -->pdf delete ---> resume data ( score , missing skills , recommen.)
 
 import redis from "../../../shared/redis/redis.js";
-import { resumeAgent } from "../agents/resume.agent.js";
+import { repairResumeJson, resumeAgent } from "../agents/resume.agent.js";
 import extractText from "../config/pdf.js";
 import Resume from "../models/resume.model.js";
+import { retrieveKeywordEvidence } from "../rag/bm25Retriever.js";
+import { buildResumeJdChunks } from "../rag/chunker.js";
+import { retrieveHybridEvidence } from "../rag/hybridRetriever.js";
+import { retrieveVectorEvidence } from "../rag/vectorRetriever.js";
 import fs from "fs"
 
 const toStringArray = (value) => {
@@ -55,6 +59,76 @@ const normalizeResumeData = (data) => ({
     experienceFitSummary: data.experienceFitSummary || "",
 })
 
+const extractJsonObject = (content = "") => {
+    const cleaned = String(content)
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+
+    if (start === -1 || end === -1 || end <= start) {
+        return cleaned;
+    }
+
+    return cleaned.slice(start, end + 1);
+}
+
+const parseResumeResponse = async (content) => {
+    const jsonText = extractJsonObject(content);
+
+    try {
+        return JSON.parse(jsonText);
+    } catch (error) {
+        console.warn(`[resume] Invalid analyzer JSON, attempting repair: ${error.message}`);
+        const repairedJson = await repairResumeJson(jsonText, error.message);
+        return JSON.parse(extractJsonObject(repairedJson));
+    }
+}
+
+const buildGroundedScoringContext = ({ ragData, ragHybridData, ragKeywordData, ragVectorData }) => {
+    const matchedQueryChunkIds = new Set(
+        (ragHybridData.matches || []).map((match) => match.queryChunkId)
+    );
+    const uncoveredJdChunks = (ragData.chunks || [])
+        .filter((chunk) => chunk.source === "job_description" && !matchedQueryChunkIds.has(chunk.chunkId))
+        .slice(0, 6);
+
+    const evidenceLines = (ragHybridData.matches || [])
+        .slice(0, 8)
+        .map((match, index) => {
+            const signals = (match.retrievalSignals || []).join("+") || "unknown";
+            const terms = (match.matchedTerms || []).join(", ") || "semantic-only";
+            return [
+                `Evidence ${index + 1}`,
+                `Hybrid Score: ${match.hybridScore}`,
+                `Signals: ${signals}`,
+                `BM25: ${match.keywordScore || 0}`,
+                `Vector Similarity: ${match.vectorSimilarity || 0}`,
+                `Matched Terms: ${terms}`,
+                `JD Chunk (${match.querySection}): ${match.queryText}`,
+                `Resume Chunk (${match.resumeSection}): ${match.resumeText}`,
+            ].join("\n");
+        })
+        .join("\n\n");
+
+    const uncoveredLines = uncoveredJdChunks
+        .map((chunk, index) => `Uncovered JD Requirement ${index + 1} (${chunk.section}): ${chunk.text}`)
+        .join("\n");
+
+    return [
+        "Use this retrieval packet as the primary source for job-match scoring.",
+        `Hybrid retrieval weights: keyword ${ragHybridData.stats.keywordWeight}, vector ${ragHybridData.stats.vectorWeight}.`,
+        `BM25 matches: ${ragKeywordData.stats.returned}. Vector matches: ${ragVectorData.stats.returned}. Hybrid matches: ${ragHybridData.stats.returned}.`,
+        "",
+        "Top hybrid evidence:",
+        evidenceLines || "No hybrid evidence found.",
+        "",
+        "JD requirements with no top hybrid evidence:",
+        uncoveredLines || "Every JD chunk has at least one retrieved resume evidence pair.",
+    ].join("\n");
+}
+
 
 export const uploadResume = async (req,res) => {
     let file;
@@ -79,14 +153,40 @@ export const uploadResume = async (req,res) => {
         }
 
         const resumeText = await extractText(file.path)
+        const ragData = buildResumeJdChunks({
+            resumeText,
+            jobDescription,
+            jobTitle,
+            requiredExperience,
+        });
+        const ragKeywordData = retrieveKeywordEvidence({
+            chunks: ragData.chunks,
+            topK: 8,
+        });
+        const ragVectorData = await retrieveVectorEvidence({
+            chunks: ragData.chunks,
+            topK: 8,
+        });
+        const ragHybridData = retrieveHybridEvidence({
+            keywordMatches: ragKeywordData.matches,
+            vectorMatches: ragVectorData.matches,
+            topK: 8,
+        });
+        const ragContext = buildGroundedScoringContext({
+            ragData,
+            ragHybridData,
+            ragKeywordData,
+            ragVectorData,
+        });
 
         const aiResponse = await resumeAgent(resumeText, {
             jobTitle,
             jobDescription,
-            requiredExperience
+            requiredExperience,
+            ragContext,
         })
 
-        const parsedResponse = JSON.parse(aiResponse)
+        const parsedResponse = await parseResumeResponse(aiResponse)
         const resumeData = normalizeResumeData({
             ...parsedResponse,
             targetRole: jobTitle || parsedResponse.targetRole || "",
@@ -103,7 +203,17 @@ export const uploadResume = async (req,res) => {
                 extractedText:resumeText,
                 jobTitle,
                 jobDescription,
-                requiredExperience
+                requiredExperience,
+                ragChunks: ragVectorData.chunks,
+                ragStats: ragData.stats,
+                ragKeywordMatches: ragKeywordData.matches,
+                ragRetrievalStats: ragKeywordData.stats,
+                ragVectorMatches: ragVectorData.matches,
+                ragVectorStats: ragVectorData.stats,
+                ragHybridMatches: ragHybridData.matches,
+                ragHybridStats: ragHybridData.stats,
+                ragScoringMode: "hybrid-rag-grounded",
+                ragScoringEvidenceCount: ragHybridData.matches.length
 
             }    
             )
@@ -115,6 +225,16 @@ export const uploadResume = async (req,res) => {
                 jobTitle,
                 jobDescription,
                 requiredExperience,
+                ragChunks: ragVectorData.chunks,
+                ragStats: ragData.stats,
+                ragKeywordMatches: ragKeywordData.matches,
+                ragRetrievalStats: ragKeywordData.stats,
+                ragVectorMatches: ragVectorData.matches,
+                ragVectorStats: ragVectorData.stats,
+                ragHybridMatches: ragHybridData.matches,
+                ragHybridStats: ragHybridData.stats,
+                ragScoringMode: "hybrid-rag-grounded",
+                ragScoringEvidenceCount: ragHybridData.matches.length,
                 ...resumeData
             })
         }

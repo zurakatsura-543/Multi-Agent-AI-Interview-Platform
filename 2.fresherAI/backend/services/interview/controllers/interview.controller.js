@@ -12,6 +12,7 @@ export const startInterview = async (req, res) => {
             role,
             useResume = false,
             resume = {}, } = req.body;
+        const resumeMode = Boolean(useResume && resume && Object.keys(resume).length);
 
         if (!type && !role) {
             return res.status(400).json({
@@ -24,8 +25,8 @@ export const startInterview = async (req, res) => {
             action: "start",
             role,
             type,
-            useResume,
-            resume
+            useResume: resumeMode,
+            resume: resumeMode ? resume : null
         })
 
         const questions = result.questions;
@@ -44,7 +45,7 @@ export const startInterview = async (req, res) => {
 
             role,
 
-            useResume,
+            useResume: resumeMode,
 
             questions,
 
@@ -136,6 +137,8 @@ export const submitAnswer = async (req, res) => {
 
             difficulty: currentQuestion.difficulty,
 
+            evidence: currentQuestion.evidence,
+
             completed,
 
             role: interview.role,
@@ -169,6 +172,27 @@ export const submitAnswer = async (req, res) => {
 
             interview.recommendations =
                 result.report.recommendations;
+
+            interview.readinessScore =
+                result.report.readinessScore || 0;
+
+            interview.evidenceCoverageSummary =
+                result.report.evidenceCoverageSummary || "";
+
+            interview.averageJdAlignment =
+                result.report.averageJdAlignment || 0;
+
+            interview.groundednessRisk =
+                result.report.groundednessRisk || "not_applicable";
+
+            interview.strongestMatchedSkills =
+                result.report.strongestMatchedSkills || [];
+
+            interview.weakestJdGaps =
+                result.report.weakestJdGaps || [];
+
+            interview.nextPracticePlan =
+                result.report.nextPracticePlan || [];
 
             await interview.save()
 
@@ -430,5 +454,3 @@ export const getAllInterviews = async (req, res) => {
         });
     }
 }
-
-

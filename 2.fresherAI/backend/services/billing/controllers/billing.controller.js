@@ -3,6 +3,7 @@ import Billing from "../models/billing.model.js";
 import crypto from "crypto"
 import mongoose from "mongoose";
 import redis from "../../../shared/redis/redis.js";
+import SharedUser from "../../auth/model/user.model.js";
 
 
 
@@ -36,7 +37,7 @@ const getUserMongoUrl = () => {
     if (process.env.USER_MONGODB_URL) return process.env.USER_MONGODB_URL;
     if (process.env.AUTH_MONGODB_URL) return process.env.AUTH_MONGODB_URL;
 
-    return process.env.MONGODB_URL?.replace(/\/([^/?]+)(\?.*)?$/, "/user$2");
+    return "";
 }
 
 const getUserModel = async () => {
@@ -45,7 +46,8 @@ const getUserModel = async () => {
     const userMongoUrl = getUserMongoUrl();
 
     if (!userMongoUrl) {
-        throw new Error("User MongoDB URL is missing for billing coin credit");
+        UserModel = SharedUser;
+        return UserModel;
     }
 
     userConnection = mongoose.createConnection(userMongoUrl);
@@ -199,6 +201,8 @@ export const verifyPayment = async (req, res) => {
       });
         }
 
+        const User = await getUserModel();
+
         if (payment.status === "paid") {
       const user = await User.findById(userId);
       return res.status(200).json({
@@ -216,7 +220,6 @@ export const verifyPayment = async (req, res) => {
       });
     }
 
-    const User = await getUserModel();
     const user = await User.findById(userId);
 
     if (!user) {

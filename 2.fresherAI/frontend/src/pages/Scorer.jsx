@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from "motion/react"
 import { useState } from 'react'
-import { FiAlertCircle, FiBriefcase, FiCheckCircle, FiClock, FiTarget, FiTrendingUp, FiUploadCloud, FiUser, FiZap } from 'react-icons/fi'
+import { FiAlertCircle, FiBriefcase, FiCheckCircle, FiClock, FiFileText, FiSearch, FiTarget, FiTrendingUp, FiUploadCloud, FiUser, FiZap } from 'react-icons/fi'
 import api from '../utils/axios'
 import { useDispatch, useSelector } from 'react-redux'
 import { setResume } from '../redux/resumeSlice'
@@ -78,6 +78,158 @@ const Tag = ({ text, color }) => {
         </div>
     )
 }
+
+const EvidenceCard = ({ match, index }) => (
+    <motion.div
+        initial={{ y: 14, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, delay: 0.05 + index * 0.04 }}
+        className='rounded-2xl border border-black/8 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)]'>
+        <div className='mb-3 flex flex-wrap items-center justify-between gap-2'>
+            <div className='flex items-center gap-2'>
+                <span className='flex h-8 w-8 items-center justify-center rounded-xl bg-[#F1EDFF] text-[#6D35FF]'>
+                    <FiSearch size={14} />
+                </span>
+                <div>
+                    <p className='text-xs font-black text-[#071123]'>Evidence Match #{index + 1}</p>
+                    <p className='text-[10px] text-black/40'>BM25 keyword retrieval</p>
+                </div>
+            </div>
+            <span className='rounded-full border border-[#DDD6FE] bg-[#F8F7FF] px-2.5 py-1 text-[10px] font-black text-[#6D35FF]'>
+                score {match.score}
+            </span>
+        </div>
+
+        <div className='grid gap-3 lg:grid-cols-2'>
+            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] p-3'>
+                <div className='mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-black/45'>
+                    <FiTarget size={11} /> JD Evidence · {match.querySection}
+                </div>
+                <p className='text-xs leading-5 text-[#48566A]'>{match.queryText}</p>
+            </div>
+            <div className='rounded-xl border border-emerald-200 bg-emerald-50 p-3'>
+                <div className='mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-700/60'>
+                    <FiFileText size={11} /> Resume Evidence · {match.resumeSection}
+                </div>
+                <p className='text-xs leading-5 text-emerald-950/75'>{match.resumeText}</p>
+            </div>
+        </div>
+
+        {!!match.matchedTerms?.length && (
+            <div className='mt-3 flex flex-wrap gap-1.5'>
+                {match.matchedTerms.map((term) => (
+                    <Tag key={`${match.resumeChunkId}-${term}`} text={term} color="blue" />
+                ))}
+            </div>
+        )}
+    </motion.div>
+)
+
+const VectorEvidenceCard = ({ match, index }) => (
+    <motion.div
+        initial={{ y: 14, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, delay: 0.05 + index * 0.04 }}
+        className='rounded-2xl border border-[#C4B5FD] bg-white p-4 shadow-[0_10px_30px_rgba(109,53,255,0.06)]'>
+        <div className='mb-3 flex flex-wrap items-center justify-between gap-2'>
+            <div className='flex items-center gap-2'>
+                <span className='flex h-8 w-8 items-center justify-center rounded-xl bg-[#F1EDFF] text-[#6D35FF]'>
+                    <FiZap size={14} />
+                </span>
+                <div>
+                    <p className='text-xs font-black text-[#071123]'>Semantic Match #{index + 1}</p>
+                    <p className='text-[10px] text-black/40'>{match.embeddingProvider || "vector"} · {match.embeddingModel || "embedding"}</p>
+                </div>
+            </div>
+            <span className='rounded-full border border-[#DDD6FE] bg-[#F8F7FF] px-2.5 py-1 text-[10px] font-black text-[#6D35FF]'>
+                similarity {match.similarity}
+            </span>
+        </div>
+
+        <div className='grid gap-3 lg:grid-cols-2'>
+            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] p-3'>
+                <div className='mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-black/45'>
+                    <FiTarget size={11} /> JD Meaning · {match.querySection}
+                </div>
+                <p className='text-xs leading-5 text-[#48566A]'>{match.queryText}</p>
+            </div>
+            <div className='rounded-xl border border-[#DDD6FE] bg-[#FBFAFF] p-3'>
+                <div className='mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#6D35FF]/65'>
+                    <FiFileText size={11} /> Resume Meaning · {match.resumeSection}
+                </div>
+                <p className='text-xs leading-5 text-[#251855]/75'>{match.resumeText}</p>
+            </div>
+        </div>
+    </motion.div>
+)
+
+const HybridEvidenceCard = ({ match, index }) => (
+    <motion.div
+        initial={{ y: 14, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, delay: 0.05 + index * 0.04 }}
+        className='rounded-2xl border border-[#DDD6FE] bg-[#FBFAFF] p-4 shadow-[0_12px_34px_rgba(109,53,255,0.08)]'>
+        <div className='mb-3 flex flex-wrap items-center justify-between gap-2'>
+            <div className='flex items-center gap-2'>
+                <span className='flex h-8 w-8 items-center justify-center rounded-xl bg-[#6D35FF] text-white shadow-[0_8px_18px_rgba(109,53,255,0.24)]'>
+                    <FiTrendingUp size={14} />
+                </span>
+                <div>
+                    <p className='text-xs font-black text-[#071123]'>Hybrid Evidence #{index + 1}</p>
+                    <p className='text-[10px] text-black/40'>BM25 keywords + vector semantic ranking</p>
+                </div>
+            </div>
+            <div className='flex flex-wrap items-center gap-1.5'>
+                {(match.retrievalSignals || []).map((signal) => (
+                    <span key={signal} className='rounded-full border border-[#DDD6FE] bg-white px-2 py-1 text-[10px] font-black capitalize text-[#6D35FF]'>
+                        {signal}
+                    </span>
+                ))}
+                <span className='rounded-full bg-[#071123] px-2.5 py-1 text-[10px] font-black text-white'>
+                    hybrid {match.hybridScore}
+                </span>
+            </div>
+        </div>
+
+        <div className='mb-3 grid grid-cols-3 gap-2 text-center'>
+            <div className='rounded-xl border border-black/8 bg-white px-3 py-2'>
+                <p className='text-[10px] text-black/35'>BM25</p>
+                <p className='text-xs font-black text-[#251855]'>{match.keywordScore || 0}</p>
+            </div>
+            <div className='rounded-xl border border-black/8 bg-white px-3 py-2'>
+                <p className='text-[10px] text-black/35'>Semantic</p>
+                <p className='text-xs font-black text-[#251855]'>{match.vectorSimilarity || 0}</p>
+            </div>
+            <div className='rounded-xl border border-black/8 bg-white px-3 py-2'>
+                <p className='text-[10px] text-black/35'>Keyword Norm</p>
+                <p className='text-xs font-black text-[#251855]'>{match.normalizedKeywordScore || 0}</p>
+            </div>
+        </div>
+
+        <div className='grid gap-3 lg:grid-cols-2'>
+            <div className='rounded-xl border border-black/8 bg-white p-3'>
+                <div className='mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-black/45'>
+                    <FiTarget size={11} /> JD Evidence · {match.querySection}
+                </div>
+                <p className='text-xs leading-5 text-[#48566A]'>{match.queryText}</p>
+            </div>
+            <div className='rounded-xl border border-[#DDD6FE] bg-white p-3'>
+                <div className='mb-2 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-[#6D35FF]/65'>
+                    <FiFileText size={11} /> Resume Evidence · {match.resumeSection}
+                </div>
+                <p className='text-xs leading-5 text-[#251855]/75'>{match.resumeText}</p>
+            </div>
+        </div>
+
+        {!!match.matchedTerms?.length && (
+            <div className='mt-3 flex flex-wrap gap-1.5'>
+                {match.matchedTerms.map((term) => (
+                    <Tag key={`${match.resumeChunkId}-${term}`} text={term} color="blue" />
+                ))}
+            </div>
+        )}
+    </motion.div>
+)
 
 const Navbar = ({ label }) => {
     const navigate = useNavigate()
@@ -161,6 +313,12 @@ function Scorer({ user, setUser }) {
     // scorer section
     const displayScore = resume?.matchScore || resume?.score || 0
     const targetRole = resume?.targetRole || resume?.jobTitle || resume?.suggestedRole
+    const ragMatches = resume?.ragKeywordMatches || []
+    const ragStats = resume?.ragRetrievalStats || {}
+    const vectorMatches = resume?.ragVectorMatches || []
+    const vectorStats = resume?.ragVectorStats || {}
+    const hybridMatches = resume?.ragHybridMatches || []
+    const hybridStats = resume?.ragHybridStats || {}
 
     if (resume) return (
         <div className='min-h-screen bg-[#F6F7FB] text-[#071123]'>
@@ -201,6 +359,16 @@ function Scorer({ user, setUser }) {
                             <FiUser className='text-purple-400 text-xs' />
                             <span className='text-xs text-purple-300'>{targetRole}</span>
                         </div>
+                        {resume?.ragScoringMode && (
+                            <div className='mt-2 flex flex-wrap items-center gap-1.5'>
+                                <span className='rounded-full border border-purple-400/30 bg-purple-400/10 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-purple-100'>
+                                    Hybrid RAG grounded
+                                </span>
+                                <span className='text-[10px] text-white/40'>
+                                    {resume?.ragScoringEvidenceCount || 0} evidence pairs used for scoring
+                                </span>
+                            </div>
+                        )}
                         {resume?.roleFitSummary && (
                             <p className='mt-3 max-w-3xl text-xs leading-5 text-white/55'>{resume.roleFitSummary}</p>
                         )}
@@ -292,6 +460,142 @@ function Scorer({ user, setUser }) {
                         </div>
                     </motion.div>
                 </div>
+
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.125 }}
+                    className='rounded-2xl border border-[#DDD6FE] bg-white p-4 shadow-[0_12px_34px_rgba(109,53,255,0.08)]'>
+                    <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+                        <div>
+                            <div className='flex items-center gap-2'>
+                                <FiTrendingUp className='text-[#6D35FF]' size={15} />
+                                <h3 className='text-sm font-black text-[#071123]'>Hybrid Evidence Ranking</h3>
+                            </div>
+                            <p className='mt-1 max-w-2xl text-xs leading-5 text-black/45'>
+                                Final retrieval ranking combines semantic similarity with BM25 keyword evidence, so exact skills and related meaning both influence the match.
+                            </p>
+                        </div>
+                        <div className='grid grid-cols-4 gap-2 text-center'>
+                            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Keyword</p>
+                                <p className='text-xs font-black text-[#251855]'>{Math.round((hybridStats.keywordWeight || 0) * 100)}%</p>
+                            </div>
+                            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Vector</p>
+                                <p className='text-xs font-black text-[#251855]'>{Math.round((hybridStats.vectorWeight || 0) * 100)}%</p>
+                            </div>
+                            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Latency</p>
+                                <p className='text-xs font-black text-[#251855]'>{hybridStats.latencyMs ?? 0}ms</p>
+                            </div>
+                            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Matches</p>
+                                <p className='text-xs font-black text-[#251855]'>{hybridStats.returned ?? hybridMatches.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {hybridMatches.length > 0 ? (
+                    <div className='grid grid-cols-1 gap-3'>
+                        {hybridMatches.slice(0, 5).map((match, index) => (
+                            <HybridEvidenceCard key={`${match.queryChunkId}-${match.resumeChunkId}-${index}`} match={match} index={index} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className='rounded-2xl border border-black/8 bg-white p-4 text-xs text-black/45 shadow-[0_10px_30px_rgba(15,23,42,0.05)]'>
+                        No hybrid evidence stored yet. Re-upload a resume with a job description to generate combined keyword + semantic rankings.
+                    </div>
+                )}
+
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.13 }}
+                    className='rounded-2xl border border-[#DDD6FE] bg-[#FBFAFF] p-4 shadow-[0_10px_30px_rgba(109,53,255,0.06)]'>
+                    <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+                        <div>
+                            <div className='flex items-center gap-2'>
+                                <FiSearch className='text-[#6D35FF]' size={15} />
+                                <h3 className='text-sm font-black text-[#071123]'>RAG Keyword Evidence</h3>
+                            </div>
+                            <p className='mt-1 max-w-2xl text-xs leading-5 text-black/45'>
+                                BM25 retrieval compares job-description chunks against resume chunks and surfaces the strongest grounded evidence behind the match.
+                            </p>
+                        </div>
+                        <div className='grid grid-cols-3 gap-2 text-center'>
+                            <div className='rounded-xl border border-black/8 bg-white px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Resume</p>
+                                <p className='text-sm font-black text-[#251855]'>{ragStats.corpusChunks ?? resume?.ragStats?.resumeChunks ?? 0}</p>
+                            </div>
+                            <div className='rounded-xl border border-black/8 bg-white px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>JD</p>
+                                <p className='text-sm font-black text-[#251855]'>{ragStats.queryChunks ?? resume?.ragStats?.jdChunks ?? 0}</p>
+                            </div>
+                            <div className='rounded-xl border border-black/8 bg-white px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Matches</p>
+                                <p className='text-sm font-black text-[#251855]'>{ragStats.returned ?? ragMatches.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {ragMatches.length > 0 ? (
+                    <div className='grid grid-cols-1 gap-3'>
+                        {ragMatches.slice(0, 5).map((match, index) => (
+                            <EvidenceCard key={`${match.queryChunkId}-${match.resumeChunkId}-${index}`} match={match} index={index} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className='rounded-2xl border border-black/8 bg-white p-4 text-xs text-black/45 shadow-[0_10px_30px_rgba(15,23,42,0.05)]'>
+                        No keyword evidence stored yet. Re-upload a resume with a job description to generate RAG chunks and BM25 matches.
+                    </div>
+                )}
+
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.15 }}
+                    className='rounded-2xl border border-[#DDD6FE] bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)]'>
+                    <div className='flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between'>
+                        <div>
+                            <div className='flex items-center gap-2'>
+                                <FiZap className='text-[#6D35FF]' size={15} />
+                                <h3 className='text-sm font-black text-[#071123]'>Vector Semantic Evidence</h3>
+                            </div>
+                            <p className='mt-1 max-w-2xl text-xs leading-5 text-black/45'>
+                                Embeddings compare the meaning of JD chunks and resume chunks, catching relevant matches even when the wording is different.
+                            </p>
+                        </div>
+                        <div className='grid grid-cols-3 gap-2 text-center'>
+                            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Provider</p>
+                                <p className='text-xs font-black text-[#251855]'>{vectorStats.provider || "none"}</p>
+                            </div>
+                            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Latency</p>
+                                <p className='text-xs font-black text-[#251855]'>{vectorStats.latencyMs ?? 0}ms</p>
+                            </div>
+                            <div className='rounded-xl border border-black/8 bg-[#F8F9FA] px-3 py-2'>
+                                <p className='text-[10px] text-black/35'>Matches</p>
+                                <p className='text-xs font-black text-[#251855]'>{vectorStats.returned ?? vectorMatches.length}</p>
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {vectorMatches.length > 0 ? (
+                    <div className='grid grid-cols-1 gap-3'>
+                        {vectorMatches.slice(0, 5).map((match, index) => (
+                            <VectorEvidenceCard key={`${match.queryChunkId}-${match.resumeChunkId}-${index}`} match={match} index={index} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className='rounded-2xl border border-black/8 bg-white p-4 text-xs text-black/45 shadow-[0_10px_30px_rgba(15,23,42,0.05)]'>
+                        No vector evidence stored yet. Re-upload a resume with a job description to generate embedding-based semantic matches.
+                    </div>
+                )}
 
                 {/* Weaknesses & Strengths */}
                 <div className='grid grid-cols-1 gap-3 md:grid-cols-2'>

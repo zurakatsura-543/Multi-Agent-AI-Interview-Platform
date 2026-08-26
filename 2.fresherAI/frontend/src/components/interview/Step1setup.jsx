@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { motion } from "motion/react"
 import { FiArrowLeft, FiArrowRight, FiBriefcase, FiCheck, FiCheckCircle, FiCpu, FiFileText, FiMic, FiShield, FiUploadCloud, FiZap } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
@@ -29,10 +29,18 @@ function Step1setup({ user, setUser }) {
     const [customRole, setCustomRole] = useState("");
     const [type, setType] = useState("technical");
     const [useResume, setUseResume] = useState(Boolean(resume))
+    const [modeTouched, setModeTouched] = useState(false)
     const [file, setFile] = useState(null)
     const [uploading, setUploading] = useState(false)
     const [starting, setStarting] = useState(false)
     const role = useMemo(() => selectedRole === "Other" ? customRole.trim() : selectedRole, [selectedRole, customRole]);
+    const hasRagEvidence = Boolean(resume?.ragHybridMatches?.length || resume?.ragKeywordMatches?.length || resume?.ragVectorMatches?.length);
+
+    useEffect(() => {
+        if (resume && !modeTouched) {
+            setUseResume(true)
+        }
+    }, [resume, modeTouched])
 
     const uploadResume = async () => {
         if (!file) {
@@ -60,6 +68,7 @@ function Step1setup({ user, setUser }) {
 
             dispatch(setResume(response?.data?.data))
             setUseResume(true)
+            setModeTouched(true)
             setUploading(false)
             setFile(null)
         } catch (error) {
@@ -78,7 +87,7 @@ function Step1setup({ user, setUser }) {
 
         setStarting(true)
         try {
-            const response = await startInterview({ role, type, useResume, resume })
+            const response = await startInterview({ role, type, useResume, resume: useResume ? resume : null })
 
             if (response) {
                 try {
@@ -209,27 +218,55 @@ function Step1setup({ user, setUser }) {
                             )}
                         </div>
 
-                        <button
-                            type='button'
-                            onClick={() => {
-                                if (!resume && !useResume) {
-                                    alert("Upload or score your resume first to enable resume-based interview questions.")
-                                    return;
-                                }
-                                setUseResume(!useResume)
-                            }}
-                            className={`mt-4 flex w-full items-center justify-between rounded-2xl border p-3 text-left transition ${useResume ? "border-emerald-200 bg-emerald-50" : "border-black/8 bg-[#F9FAFB]"}`}>
-                            <div className='flex items-center gap-3'>
-                                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${useResume ? "bg-emerald-100 text-emerald-600" : "bg-[#F1EDFF] text-[#6D35FF]"}`}>
-                                    <FiFileText />
+                        <div className='mt-4 grid gap-2 rounded-2xl border border-black/8 bg-[#F9FAFB] p-2 sm:grid-cols-2'>
+                            <button
+                                type='button'
+                                onClick={() => {
+                                    if (!resume) {
+                                        alert("Score or upload your resume first to enable resume-aware interview questions.")
+                                        return;
+                                    }
+                                    setUseResume(true)
+                                    setModeTouched(true)
+                                }}
+                                className={`rounded-xl border p-3 text-left transition ${useResume ? "border-emerald-200 bg-emerald-50 shadow-sm" : "border-transparent bg-white hover:border-[#DDD6FE]"}`}>
+                                <div className='flex items-start justify-between gap-3'>
+                                    <div className='flex items-start gap-3'>
+                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${useResume ? "bg-emerald-100 text-emerald-600" : "bg-[#F1EDFF] text-[#6D35FF]"}`}>
+                                            <FiFileText />
+                                        </div>
+                                        <div>
+                                            <p className='text-sm font-black'>Resume-aware</p>
+                                            <p className='mt-0.5 text-xs leading-5 text-black/45'>
+                                                {resume ? `Uses ${hasRagEvidence ? "RAG evidence" : "saved resume context"} for personalized questions.` : "Needs a scored or uploaded resume."}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {useResume && <FiCheckCircle className='mt-1 shrink-0 text-emerald-600' />}
                                 </div>
-                                <div>
-                                    <p className='text-sm font-black'>Resume-first interview</p>
-                                    <p className='text-xs text-black/45'>{resume ? `Questions will use ${resume?.suggestedRole || "your resume"} context first.` : "Upload a resume to unlock personalized questions."}</p>
+                            </button>
+
+                            <button
+                                type='button'
+                                onClick={() => {
+                                    setUseResume(false)
+                                    setModeTouched(true)
+                                }}
+                                className={`rounded-xl border p-3 text-left transition ${!useResume ? "border-[#DDD6FE] bg-white shadow-sm ring-4 ring-[#6D35FF]/8" : "border-transparent bg-white hover:border-[#DDD6FE]"}`}>
+                                <div className='flex items-start justify-between gap-3'>
+                                    <div className='flex items-start gap-3'>
+                                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${!useResume ? "bg-[#F1EDFF] text-[#6D35FF]" : "bg-white text-black/35 ring-1 ring-black/10"}`}>
+                                            <FiCpu />
+                                        </div>
+                                        <div>
+                                            <p className='text-sm font-black'>General practice</p>
+                                            <p className='mt-0.5 text-xs leading-5 text-black/45'>Role-based questions without using resume data.</p>
+                                        </div>
+                                    </div>
+                                    {!useResume && <FiCheckCircle className='mt-1 shrink-0 text-[#6D35FF]' />}
                                 </div>
-                            </div>
-                            {useResume && <FiCheckCircle className='text-emerald-600' />}
-                        </button>
+                            </button>
+                        </div>
 
                         {resume && useResume && (
                             <div className='mt-3 grid gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 sm:grid-cols-[0.75fr_1.7fr_0.55fr]'>
@@ -242,8 +279,8 @@ function Step1setup({ user, setUser }) {
                                     <p className='break-words text-sm font-black leading-5 text-emerald-800'>{resume?.targetRole || resume?.suggestedRole || "Detected"}</p>
                                 </div>
                                 <div>
-                                    <p className='text-[10px] font-black uppercase tracking-widest text-emerald-700/60'>Gaps</p>
-                                    <p className='text-sm font-black text-emerald-800'>{resume?.missingSkills?.length || 0}</p>
+                                    <p className='text-[10px] font-black uppercase tracking-widest text-emerald-700/60'>Evidence</p>
+                                    <p className='text-sm font-black text-emerald-800'>{hasRagEvidence ? "RAG" : "Resume"}</p>
                                 </div>
                             </div>
                         )}

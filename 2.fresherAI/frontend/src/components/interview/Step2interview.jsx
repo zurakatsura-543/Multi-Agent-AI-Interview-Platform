@@ -3,7 +3,7 @@ import { useState } from 'react'
 import maleVideo from "../../assets/male-ai.mp4"
 import femaleVideo from "../../assets/female-ai.mp4"
 import { AnimatePresence, motion } from "motion/react"
-import { FiArrowRight, FiCamera, FiCameraOff, FiClock, FiCode, FiCpu, FiLogOut, FiMessageSquare, FiMic, FiMicOff, FiRadio } from 'react-icons/fi'
+import { FiArrowRight, FiCamera, FiCameraOff, FiClock, FiCode, FiCpu, FiFileText, FiLogOut, FiMessageSquare, FiMic, FiMicOff, FiRadio, FiTarget } from 'react-icons/fi'
 import CodeEditor from './CodeEditor'
 import Timer from './Timer'
 import { submitAnswer } from '../../apis/interview.api'
@@ -55,6 +55,8 @@ const navigate = useNavigate()
     scenario: "Scenario",
     behavioral: "Behavioral",
   }
+  const evidence = question?.evidence || {}
+  const hasEvidence = Boolean(evidence?.jdRequirement || evidence?.resumeEvidence || evidence?.testedGap)
   const composedAnswer = () => `${answer} ${interimTranscript}`.trim()
 
   const stopInterviewActivity = (updateUi = true) => {
@@ -575,7 +577,7 @@ const navigate = useNavigate()
           <motion.div 
           initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-          className='relative overflow-hidden rounded-2xl bg-[#0E1728] border border-white/8 p-4 sm:p-5 mb-4'>
+          className='relative overflow-hidden rounded-2xl bg-[#0E1728] border border-white/8 p-4 sm:p-5 mb-3'>
             <div className='absolute inset-0 bg-[linear-gradient(135deg,rgba(109,53,255,0.16),transparent_45%),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:auto,28px_28px,28px_28px] pointer-events-none'/>
             <div className='relative flex items-center gap-2.5 mb-3'>
               <div className='w-8 h-8 rounded-lg bg-white text-[#071123] flex items-center justify-center shrink-0'>
@@ -590,6 +592,64 @@ const navigate = useNavigate()
               {question.question}</p>
 
           </motion.div>
+
+          {hasEvidence && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className='mb-4 rounded-2xl border border-emerald-400/15 bg-emerald-400/5 p-3 sm:p-4'>
+              <div className='mb-3 flex flex-wrap items-center justify-between gap-2'>
+                <div className='flex items-center gap-2'>
+                  <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-300'>
+                    <FiTarget size={14} />
+                  </div>
+                  <div>
+                    <p className='text-xs font-black uppercase tracking-widest text-emerald-300'>Why this question?</p>
+                    <p className='text-[10px] text-white/35'>{evidence?.retrievalMethod ? `${evidence.retrievalMethod} retrieval evidence` : "Resume-JD evidence"}</p>
+                  </div>
+                </div>
+
+                {evidence?.signals?.length > 0 && (
+                  <div className='flex flex-wrap justify-end gap-1.5'>
+                    {evidence.signals.slice(0, 3).map((signal) => (
+                      <span key={signal} className='rounded-full border border-emerald-300/15 bg-emerald-300/8 px-2 py-0.5 text-[10px] text-emerald-100/70'>
+                        {signal}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className='grid gap-2 sm:grid-cols-2'>
+                {evidence?.jdRequirement && (
+                  <div className='rounded-xl border border-white/8 bg-white/5 p-3'>
+                    <div className='mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white/35'>
+                      <FiTarget size={11} />
+                      JD Requirement
+                    </div>
+                    <p className='text-xs leading-5 text-white/70'>{evidence.jdRequirement}</p>
+                  </div>
+                )}
+
+                {evidence?.resumeEvidence && (
+                  <div className='rounded-xl border border-white/8 bg-white/5 p-3'>
+                    <div className='mb-1.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-white/35'>
+                      <FiFileText size={11} />
+                      Resume Evidence
+                    </div>
+                    <p className='text-xs leading-5 text-white/70'>{evidence.resumeEvidence}</p>
+                  </div>
+                )}
+              </div>
+
+              {evidence?.testedGap && (
+                <div className='mt-2 rounded-xl border border-amber-300/20 bg-amber-300/8 px-3 py-2'>
+                  <p className='text-[10px] font-black uppercase tracking-widest text-amber-200/80'>Gap being tested</p>
+                  <p className='mt-1 text-xs text-amber-50/75'>{evidence.testedGap}</p>
+                </div>
+              )}
+            </motion.div>
+          )}
 
           <div className='mb-3'>
             <div className='flex justify-between text-[10px] text-white/35 mb-1'>
@@ -641,8 +701,23 @@ const navigate = useNavigate()
                 initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 ,y:6}}
-                className='rounded-xl border border-green-500/20 bg-green-500/5 p-4 max-h-40 overflow-y-auto'>
-                  <p className='text-xs uppercase tracking-widest text-green-400 mb-2'>AI Feedback</p>
+                className='rounded-xl border border-green-500/20 bg-green-500/5 p-4 max-h-48 overflow-y-auto'>
+                  <div className='mb-2 flex flex-wrap items-center justify-between gap-2'>
+                    <p className='text-xs uppercase tracking-widest text-green-400'>AI Feedback</p>
+                    {feedback?.evidenceCoverage && feedback.evidenceCoverage !== "not_applicable" && (
+                      <div className='flex flex-wrap items-center gap-1.5'>
+                        <span className='rounded-full border border-green-400/20 bg-green-400/10 px-2 py-0.5 text-[10px] text-green-200'>
+                          Evidence: {feedback.evidenceCoverage}
+                        </span>
+                        <span className='rounded-full border border-purple-300/20 bg-purple-300/10 px-2 py-0.5 text-[10px] text-purple-100'>
+                          JD: {feedback.jdAlignment || 0}/100
+                        </span>
+                        <span className='rounded-full border border-amber-300/20 bg-amber-300/10 px-2 py-0.5 text-[10px] text-amber-100'>
+                          Risk: {feedback.groundednessRisk}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                   <p className='text-sm text-zinc-300 leading-6'>{feedback.feedback}</p>
 
                 </motion.div>)}
