@@ -12,6 +12,20 @@ import { retrieveHybridEvidence } from "../rag/hybridRetriever.js";
 import { retrieveVectorEvidence } from "../rag/vectorRetriever.js";
 import fs from "fs"
 
+let resumeIndexReadyPromise;
+
+const ensureResumeHistoryIndexes = async () => {
+    if (!resumeIndexReadyPromise) {
+        resumeIndexReadyPromise = Resume.collection.dropIndex("userId_1").catch((error) => {
+            if (error?.codeName !== "IndexNotFound" && error?.code !== 27) {
+                console.warn(`[resume] Could not drop legacy unique userId index: ${error.message}`);
+            }
+        });
+    }
+
+    return resumeIndexReadyPromise;
+}
+
 const toStringArray = (value) => {
     if (!Array.isArray(value)) {
         return value ? [String(value)] : [];
@@ -195,31 +209,9 @@ export const uploadResume = async (req,res) => {
             requiredExperience,
         })
 
-        let resume = await Resume.findOne({userId})
+        await ensureResumeHistoryIndexes();
 
-        if(resume){
-            Object.assign(resume,{
-                ...resumeData,
-                extractedText:resumeText,
-                jobTitle,
-                jobDescription,
-                requiredExperience,
-                ragChunks: ragVectorData.chunks,
-                ragStats: ragData.stats,
-                ragKeywordMatches: ragKeywordData.matches,
-                ragRetrievalStats: ragKeywordData.stats,
-                ragVectorMatches: ragVectorData.matches,
-                ragVectorStats: ragVectorData.stats,
-                ragHybridMatches: ragHybridData.matches,
-                ragHybridStats: ragHybridData.stats,
-                ragScoringMode: "hybrid-rag-grounded",
-                ragScoringEvidenceCount: ragHybridData.matches.length
-
-            }    
-            )
-            await resume.save()
-        }else{
-            resume = await Resume.create({
+        const resume = await Resume.create({
                 userId,
                 extractedText:resumeText,
                 jobTitle,
@@ -237,9 +229,9 @@ export const uploadResume = async (req,res) => {
                 ragScoringEvidenceCount: ragHybridData.matches.length,
                 ...resumeData
             })
-        }
 
         await redis.set(`resume:${userId}`,JSON.stringify(resume));
+        await redis.del(`resume-history:${userId}`);
 
         fs.unlinkSync(file.path);
 
@@ -278,7 +270,7 @@ export const getResume = async (req,res) => {
             data:JSON.parse(cache)
         })
     }
-    const resume = await Resume.findOne({userId})
+    const resume = await Resume.findOne({userId}).sort({ createdAt: -1 })
 
     if(!resume){
         return res.status(404).json({
@@ -306,4 +298,43 @@ export const getResume = async (req,res) => {
     
 
 
+}
+
+export const getAllResumeEvaluations = async (req,res) => {
+    try {
+        const userId = req.headers["x-user-id"];
+
+        if(!userId){
+            return res.status(400).json({
+                success:false,
+                message:"UserId is required"
+            })
+        }
+
+        const cache = await redis.get(`resume-history:${userId}`)
+
+        if(cache){
+            return res.status(200).json({
+                success:true,
+                source:"redis",
+                data:JSON.parse(cache)
+            })
+        }
+
+        const resumes = await Resume.find({userId}).sort({ createdAt: -1 }).limit(20)
+
+        await redis.set(`resume-history:${userId}`,JSON.stringify(resumes));
+
+        return res.status(200).json({
+            success:true,
+            source:"mongoDb",
+            data:resumes
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            success:false,
+            message:error.message,
+        })
+    }
 }

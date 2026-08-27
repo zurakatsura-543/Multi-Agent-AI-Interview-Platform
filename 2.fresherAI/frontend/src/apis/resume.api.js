@@ -13,3 +13,12 @@ export const getResume = async () => {
     }
     
 }
+
+export const getResumeEvaluations = async () => {
+    try {
+        const response = await api.get("/api/resume/all")
+        return response.data
+    } catch (error) {
+        return null
+    }
+}

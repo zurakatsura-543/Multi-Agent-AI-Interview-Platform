@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from "motion/react"
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FiAlertCircle, FiBriefcase, FiCheckCircle, FiClock, FiFileText, FiSearch, FiTarget, FiTrendingUp, FiUploadCloud, FiUser, FiZap } from 'react-icons/fi'
 import api from '../utils/axios'
 import { useDispatch, useSelector } from 'react-redux'
@@ -9,6 +9,7 @@ import { setResume } from '../redux/resumeSlice'
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
 import { useCoins } from '../apis/user.api'
 import BrandMark from '../components/BrandMark'
+import { getResumeEvaluations } from '../apis/resume.api'
 
 const ROLE_OPTIONS = [
     "Frontend Developer",
@@ -260,9 +261,33 @@ function Scorer({ user, setUser }) {
     const [requiredExperience, setRequiredExperience] = useState("Fresher / 0 years")
     const [jobDescription, setJobDescription] = useState("")
     const [loading, setLoading] = useState(false)
+    const [restoringResume, setRestoringResume] = useState(true)
+    const [savedEvaluations, setSavedEvaluations] = useState([])
     const dispatch = useDispatch()
     const { resume } = useSelector((state) => state.resume)
     const targetJobTitle = selectedRole === "Other" ? customRole.trim() : selectedRole
+
+    useEffect(() => {
+        let isMounted = true
+
+        const restoreSavedResume = async () => {
+            const response = await getResumeEvaluations()
+
+            if (!isMounted) return
+
+            if (response?.success && Array.isArray(response?.data)) {
+                setSavedEvaluations(response.data)
+            }
+
+            setRestoringResume(false)
+        }
+
+        restoreSavedResume()
+
+        return () => {
+            isMounted = false
+        }
+    }, [dispatch])
 
     const uploadResume = async () => {
         if (!file) {
@@ -300,6 +325,7 @@ function Scorer({ user, setUser }) {
             const response = await api.post("/api/resume/upload", formData)
 
             dispatch(setResume(response?.data?.data))
+            setSavedEvaluations((prev) => [response?.data?.data, ...prev.filter((item) => item?._id !== response?.data?.data?._id)])
             setLoading(false)
 
 
@@ -320,6 +346,33 @@ function Scorer({ user, setUser }) {
     const hybridMatches = resume?.ragHybridMatches || []
     const hybridStats = resume?.ragHybridStats || {}
 
+    const openEvaluation = (evaluation) => {
+        dispatch(setResume(evaluation))
+        setSelectedRole(evaluation.jobTitle || evaluation.targetRole || evaluation.suggestedRole || "Frontend Developer")
+        setRequiredExperience(evaluation.requiredExperience || "Fresher / 0 years")
+        setJobDescription(evaluation.jobDescription || "")
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    const backToUpload = () => {
+        dispatch(setResume(null))
+        setFile(null)
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    if (restoringResume) return (
+        <div className='min-h-screen bg-[#F6F7FB] text-[#071123]'>
+            <Navbar label="Resume Scorer" />
+            <section className='flex min-h-screen items-center justify-center px-3 pt-18 pb-6'>
+                <div className='rounded-3xl border border-[#6D35FF]/15 bg-white px-8 py-7 text-center shadow-[0_18px_60px_rgba(37,24,85,0.12)]'>
+                    <div className='mx-auto mb-4 h-10 w-10 animate-pulse rounded-2xl bg-[#F1EDFF]' />
+                    <p className='text-sm font-black text-[#071123]'>Loading saved resume evaluation</p>
+                    <p className='mt-1 text-xs text-black/45'>Checking your latest RAG-backed scorer result...</p>
+                </div>
+            </section>
+        </div>
+    )
+
     if (resume) return (
         <div className='min-h-screen bg-[#F6F7FB] text-[#071123]'>
             <Navbar label="Resume Scorer" />
@@ -333,8 +386,8 @@ function Scorer({ user, setUser }) {
                         <p className='mt-1 text-xs text-black/45'>Matched against: <span className='font-semibold text-[#251855]'>{targetRole}</span></p>
 
                     </div>
-                    <button onClick={() => dispatch(setResume(null))}
-                        className='text-[10px] sm:text-xs text-black/50 hover:text-[#0A0A0A] border border-black/15 hover:border-black/35 px-2.5 py-1 rounded-lg transition-colors'>Re-upload</button>
+                    <button onClick={backToUpload}
+                        className='text-[10px] sm:text-xs text-black/50 hover:text-[#0A0A0A] border border-black/15 hover:border-black/35 px-2.5 py-1 rounded-lg transition-colors'>Back to Upload</button>
                 </div>
 
                 {/* Score */}
@@ -826,6 +879,46 @@ function Scorer({ user, setUser }) {
 
 
                 </motion.div>
+
+                {savedEvaluations.length > 0 && (
+                    <section className='mt-6 rounded-3xl border border-black/8 bg-white p-4 shadow-[0_14px_44px_rgba(15,23,42,0.06)]'>
+                        <div className='mb-3 flex items-center justify-between'>
+                            <div>
+                                <p className='text-[10px] font-black uppercase tracking-widest text-[#6D35FF]'>Saved Evaluations</p>
+                                <h3 className='text-base font-black text-[#071123]'>Open previous resume scores</h3>
+                            </div>
+                            <span className='rounded-full bg-[#F1EDFF] px-2.5 py-1 text-[10px] font-black text-[#6D35FF]'>{savedEvaluations.length} saved</span>
+                        </div>
+
+                        <div className='grid gap-2'>
+                            {savedEvaluations.map((evaluation, index) => {
+                                const evaluationScore = evaluation?.matchScore || evaluation?.score || 0
+                                const evaluationRole = evaluation?.targetRole || evaluation?.jobTitle || evaluation?.suggestedRole || "General role"
+                                const date = evaluation?.createdAt ? new Date(evaluation.createdAt).toLocaleDateString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                }) : "Saved evaluation"
+
+                                return (
+                                    <button
+                                        key={evaluation?._id || index}
+                                        onClick={() => openEvaluation(evaluation)}
+                                        className='flex flex-col gap-2 rounded-2xl border border-black/8 bg-[#F8F9FA] p-3 text-left transition hover:border-[#6D35FF]/30 hover:bg-[#FBFAFF] sm:flex-row sm:items-center sm:justify-between'>
+                                        <div>
+                                            <p className='text-sm font-black text-[#071123]'>Evaluation {index + 1}</p>
+                                            <p className='mt-1 text-xs text-black/45'>{evaluationRole} · {date}</p>
+                                        </div>
+                                        <div className='flex items-center gap-2'>
+                                            <span className='rounded-full bg-white px-3 py-1.5 text-xs font-black text-[#251855] shadow-sm'>{evaluationScore}/100</span>
+                                            <span className='rounded-full bg-[#071123] px-3 py-1.5 text-xs font-black text-white'>View</span>
+                                        </div>
+                                    </button>
+                                )
+                            })}
+                        </div>
+                    </section>
+                )}
             </section>
 
 
