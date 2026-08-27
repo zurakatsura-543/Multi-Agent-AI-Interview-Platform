@@ -22,11 +22,22 @@ const defaultOrigins = [
   "http://127.0.0.1:5173",
 ];
 
+const normalizeOrigin = (origin) => {
+  if (!origin) return "";
+
+  try {
+    const parsed = new URL(origin.trim());
+    return parsed.origin;
+  } catch {
+    return origin.trim().replace(/\/+$/, "");
+  }
+};
+
 const configuredOrigins = [
   process.env.FRONTEND_URL,
   ...(process.env.CORS_ORIGINS || "").split(","),
 ]
-  .map((origin) => origin?.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
 
 const allowedOrigins = new Set([...defaultOrigins, ...configuredOrigins]);
@@ -34,13 +45,19 @@ const allowedOrigins = new Set([...defaultOrigins, ...configuredOrigins]);
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.has(origin)) {
+      const normalizedOrigin = normalizeOrigin(origin);
+
+      if (!origin || allowedOrigins.has(normalizedOrigin)) {
         return callback(null, true);
       }
 
-      return callback(new Error(`CORS blocked origin: ${origin}`));
+      const error = new Error(`CORS blocked origin: ${origin}`);
+      error.status = 403;
+      return callback(error);
     },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
