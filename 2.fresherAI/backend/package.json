@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "bash scripts/dev.sh",
     "dev:single": "nodemon index.js",
+    "postinstall": "rm -rf services/*/node_modules gateway/node_modules",
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
