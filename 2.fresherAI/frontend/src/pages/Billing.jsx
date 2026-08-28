@@ -95,17 +95,19 @@ function Billing({ user, setUser }) {
                 return;
             }
 
-            if (!import.meta.env.VITE_RAZORPAY_KEY_ID) {
-                alert("Frontend Razorpay key is missing in frontend/.env")
-                return;
-            }
-
             setLoadingPlan(plan.id)
             const result = await api.post("/api/billing/create",
                 { planId: plan.id })
 
+            const razorpayKeyId = result.data.razorpayKeyId || import.meta.env.VITE_RAZORPAY_KEY_ID;
+
+            if (!razorpayKeyId) {
+                alert("Razorpay key is missing. Please check backend payment configuration.")
+                return;
+            }
+
             const options = {
-                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                key: razorpayKeyId,
                 amount: result.data.order.amount,
                 currency: result.data.order.currency,
                 name: BRAND_NAME,

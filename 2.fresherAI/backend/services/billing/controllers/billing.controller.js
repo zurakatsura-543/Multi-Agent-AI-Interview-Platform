@@ -1,4 +1,4 @@
-import razorpay from "../configs/razorpay.js";
+import razorpay, { getRazorpayConfigError, getRazorpayCredentials } from "../configs/razorpay.js";
 import Billing from "../models/billing.model.js";
 import crypto from "crypto"
 import mongoose from "mongoose";
@@ -98,10 +98,12 @@ export const createOrder = async (req, res) => {
             });
         }
 
-        if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+        const configError = getRazorpayConfigError();
+
+        if (configError) {
             return res.status(503).json({
                 success: false,
-                message: "Razorpay keys are missing in billing service .env",
+                message: configError,
             });
         }
 
@@ -126,15 +128,22 @@ export const createOrder = async (req, res) => {
             status: "created",
         })
 
+        const { keyId } = getRazorpayCredentials();
+
         return res.status(201).json({
             success: true,
             order,
+            razorpayKeyId: keyId,
         })
 
     } catch (error) {
-        console.log(error)
+        console.log("Razorpay create order failed", {
+            statusCode: error?.statusCode,
+            description: error?.error?.description,
+            reason: error?.error?.reason,
+        })
         const message = error?.error?.description === "Authentication failed"
-            ? "Razorpay authentication failed. Check backend/services/billing/.env key_id and key_secret."
+            ? "Razorpay authentication failed. Check the Render backend RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET values."
             : "Failed to create order";
 
         return res.status(500).json({
@@ -187,7 +196,9 @@ export const verifyPayment = async (req, res) => {
             });
         }
 
-        const genSign = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "")
+        const { keySecret } = getRazorpayCredentials();
+
+        const genSign = crypto.createHmac("sha256", keySecret)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`).digest("hex")
 
         if(genSign !== razorpay_signature){
