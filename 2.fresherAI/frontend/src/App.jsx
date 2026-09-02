@@ -1,34 +1,51 @@
-import React from 'react'
 import { Routes , Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home'
-import Dashboard from './pages/Dashboard'
-import { use } from 'react'
-import { useState } from 'react'
-import { useEffect } from 'react'
+import { lazy, Suspense, useState, useEffect } from 'react'
 import { getCurrentUser } from './apis/user.api'
-import Scorer from './pages/Scorer'
 import { getResume } from './apis/resume.api'
 import { useDispatch } from 'react-redux'
 import { setResume } from './redux/resumeSlice'
-import ResumeBuilder from './pages/ResumeBuilder'
-import InterviewStart from './pages/InterviewStart'
-import InterviewPage from './pages/InterviewPage'
-import InterviewReport from './pages/InterviewReport'
-import Roadmap from './pages/Roadmap'
-import Billing from './pages/Billing'
+
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Scorer = lazy(() => import('./pages/Scorer'))
+const ResumeBuilder = lazy(() => import('./pages/ResumeBuilder'))
+const InterviewStart = lazy(() => import('./pages/InterviewStart'))
+const InterviewPage = lazy(() => import('./pages/InterviewPage'))
+const InterviewReport = lazy(() => import('./pages/InterviewReport'))
+const Roadmap = lazy(() => import('./pages/Roadmap'))
+const Billing = lazy(() => import('./pages/Billing'))
+
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#FBFAFF] text-[#071123]">
+      <div className="flex items-center gap-3 rounded-full border border-[#E8DEFF] bg-white px-5 py-3 shadow-[0_16px_45px_rgba(40,24,85,0.10)]">
+        <img src="/hg-logo.png" alt="" className="h-7 w-7 rounded-lg" />
+        <span className="text-sm font-black">Loading HireGen-AI...</span>
+      </div>
+    </div>
+  )
+}
+
+function RequireAuth({ user, authChecked, children }) {
+  if (!authChecked) return <LoadingScreen />
+  return user ? <Suspense fallback={<LoadingScreen />}>{children}</Suspense> : <Navigate to="/" replace />
+}
 
 function App() {
   const [user,setUser]= useState(null)
-  const [loading , setLoading] = useState(true)
+  const [authChecked , setAuthChecked] = useState(false)
   const dispatch = useDispatch()
 
 
   useEffect(()=>{
 
     const getUser = async () => {
-      const data = await getCurrentUser()
-      setUser(data?.user)
-      setLoading(false)
+      try {
+        const data = await getCurrentUser()
+        setUser(data?.user || null)
+      } finally {
+        setAuthChecked(true)
+      }
     }
 
     getUser()
@@ -36,6 +53,7 @@ function App() {
   },[])
 
   useEffect(()=>{
+    if (!user) return
 
     const getResumeData = async()=>{
       const result = await getResume()
@@ -44,56 +62,39 @@ function App() {
 
     getResumeData()
 
-  },[])
-
-
-  if(loading){
-    return(
-      <div className="fixed top-0 left-0 w-full z-[9999]">
-        <div className="h-1 bg-black animate-pulse w-full" />
-      </div>
-    )
-  }
+  },[user, dispatch])
 
   return (
    <>
 
-   <Routes>
-    <Route path='/' element={
-      user ? <Navigate to="/dashboard" replace/> : <Home setUser={setUser}/>
-      }/>
+	   <Routes>
+	    <Route path='/' element={
+	      authChecked && user ? <Navigate to="/dashboard" replace/> : <Home setUser={setUser}/>
+	      }/>
 
-    <Route path='/dashboard' element={
-      user ? <Dashboard user={user} setUser={setUser}/> 
-      : <Navigate to="/" replace/> }/>
+	    <Route path='/dashboard' element={
+	      <RequireAuth user={user} authChecked={authChecked}><Dashboard user={user} setUser={setUser}/></RequireAuth> }/>
 
-      <Route path='/scorer' element={
-      user ? <Scorer user={user} setUser={setUser}/> 
-      : <Navigate to="/" replace/> }/>
+	      <Route path='/scorer' element={
+	      <RequireAuth user={user} authChecked={authChecked}><Scorer user={user} setUser={setUser}/></RequireAuth> }/>
 
-      <Route path='/resume' element={
-      user ? <ResumeBuilder user={user} setUser={setUser}/> 
-      : <Navigate to="/" replace/> }/>
+	      <Route path='/resume' element={
+	      <RequireAuth user={user} authChecked={authChecked}><ResumeBuilder user={user} setUser={setUser}/></RequireAuth> }/>
 
-      <Route path='/interview' element={
-      user ? <InterviewStart user={user} setUser={setUser}/> 
-      : <Navigate to="/" replace/> }/>
+	      <Route path='/interview' element={
+	      <RequireAuth user={user} authChecked={authChecked}><InterviewStart user={user} setUser={setUser}/></RequireAuth> }/>
 
-      <Route path='/interview/:id' element={
-      user ? <InterviewPage user={user} setUser={setUser}/> 
-      : <Navigate to="/" replace/> }/>
+	      <Route path='/interview/:id' element={
+	      <RequireAuth user={user} authChecked={authChecked}><InterviewPage user={user} setUser={setUser}/></RequireAuth> }/>
 
-      <Route path='/interview/:id/report' element={
-      user ? <InterviewReport user={user} setUser={setUser}/> 
-      : <Navigate to="/" replace/> }/>
+	      <Route path='/interview/:id/report' element={
+	      <RequireAuth user={user} authChecked={authChecked}><InterviewReport user={user} setUser={setUser}/></RequireAuth> }/>
 
-      <Route path='/roadmap' element={
-      user ? <Roadmap user={user} setUser={setUser}/> 
-      : <Navigate to="/" replace/> }/>
+	      <Route path='/roadmap' element={
+	      <RequireAuth user={user} authChecked={authChecked}><Roadmap user={user} setUser={setUser}/></RequireAuth> }/>
 
-      <Route path='/billing' element={
-      user ? <Billing user={user} setUser={setUser}/> 
-      : <Navigate to="/" replace/> }/>
+	      <Route path='/billing' element={
+	      <RequireAuth user={user} authChecked={authChecked}><Billing user={user} setUser={setUser}/></RequireAuth> }/>
 
 
    </Routes>

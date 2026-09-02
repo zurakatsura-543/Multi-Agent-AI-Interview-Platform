@@ -3,12 +3,62 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/hg-logo.png" />
+    <link rel="preload" as="image" href="/hero.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="description" content="HireGen-AI helps candidates practice interviews, score resumes, and build role-specific learning roadmaps." />
     <title>HireGen-AI</title>
+    <style>
+      body {
+        margin: 0;
+        background: #fbfaff;
+      }
+
+      .app-shell {
+        min-height: 100vh;
+        padding: 32px 12vw;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #071123;
+      }
+
+      .app-shell-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+      }
+
+      .app-shell-brand img {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+      }
+
+      .app-shell-card {
+        margin-top: 18vh;
+        max-width: 420px;
+      }
+
+      .app-shell-card p {
+        margin: 12px 0 0;
+        color: #64708a;
+        line-height: 1.6;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <div id="root">
+      <main class="app-shell" aria-label="Loading HireGen-AI">
+        <div class="app-shell-brand">
+          <img src="/hg-logo.png" alt="" />
+          <span>HireGen-AI</span>
+        </div>
+        <section class="app-shell-card">
+          <h1>Opening your interview platform...</h1>
+          <p>Resume-aware interview practice, scoring, and roadmaps are loading.</p>
+        </section>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -82,6 +82,28 @@ const plan = [
         ],
     },
 ];
+
+const loadRazorpayCheckout = () => {
+    if (window.Razorpay) return Promise.resolve()
+
+    return new Promise((resolve, reject) => {
+        const existingScript = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')
+
+        if (existingScript) {
+            existingScript.addEventListener("load", resolve, { once: true })
+            existingScript.addEventListener("error", reject, { once: true })
+            return
+        }
+
+        const script = document.createElement("script")
+        script.src = "https://checkout.razorpay.com/v1/checkout.js"
+        script.async = true
+        script.onload = resolve
+        script.onerror = reject
+        document.body.appendChild(script)
+    })
+}
+
 function Billing({ user, setUser }) {
     const [showMenu, setShowMenu] = useState(false)
     const [loadingPlan, setLoadingPlan] = useState("")
@@ -90,12 +112,14 @@ function Billing({ user, setUser }) {
     const handlePayment = async (plan) => {
         if (plan.disabled) return;
         try {
+            setLoadingPlan(plan.id)
+            await loadRazorpayCheckout()
+
             if (!window.Razorpay) {
                 alert("Razorpay checkout failed to load. Check your internet connection and refresh.")
                 return;
             }
 
-            setLoadingPlan(plan.id)
             const result = await api.post("/api/billing/create",
                 { planId: plan.id })
 
