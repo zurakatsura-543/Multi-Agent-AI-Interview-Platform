@@ -1,342 +1,328 @@
-# Multi-Agent AI Interview Platform
+# HireGen-AI
 
-An AI-powered career preparation platform that helps freshers practice interviews, analyze resumes, receive structured feedback, and generate personalized learning roadmaps.
+An AI-powered interview preparation platform that turns resumes and job descriptions into grounded resume scores, personalized mock interviews, role-specific roadmaps, and progress insights.
 
-FresherAI combines multiple AI agents with a scalable microservices backend to simulate real interview preparation workflows: resume understanding, question generation, answer evaluation, performance reporting, and roadmap planning.
+HireGen-AI is built as a production-ready full-stack application with a React/Vite frontend, an Express backend, Firebase authentication, MongoDB persistence, Redis-backed session support, Razorpay billing, and a hybrid RAG pipeline using BM25 keyword retrieval plus semantic vector retrieval.
 
-![React](https://img.shields.io/badge/Frontend-React.js-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
-![Redis](https://img.shields.io/badge/Cache-Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
-![Docker](https://img.shields.io/badge/Containerized-Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![LangChain](https://img.shields.io/badge/AI-LangChain-1C3C3C?style=for-the-badge)
+## Live
 
-## Highlights
+- Frontend: https://multi-agent-ai-interview-platform.vercel.app
+- Backend health: https://hiregen-ai-backend.onrender.com/health
 
-- Multi-agent AI system for resume analysis, interview generation, answer feedback, and roadmap creation.
-- Resume-aware interview simulation with role-specific HR and technical questions.
-- AI feedback engine that scores answers across correctness, clarity, relevance, detail, efficiency, communication, problem solving, and creativity.
-- Personalized roadmap generator using resume insights, target role, salary goal, official docs, and YouTube resources.
-- Scalable microservice architecture with API gateway, Redis session cache, MongoDB persistence, and Dockerized services.
-- Secure Google authentication powered by Firebase and server-side Redis sessions.
-- Modern React dashboard for interview stats, skill charts, resume insights, and progress tracking.
+## Product Snapshot
 
-## Demo Flow
+HireGen-AI helps candidates answer one question: "Am I ready for this role?"
 
-1. Sign in with Google.
-2. Upload a resume PDF for AI-powered ATS analysis.
-3. Start an HR or technical mock interview.
-4. Answer timed AI-generated questions using text, speech, or code editor.
-5. Receive instant answer-level feedback.
-6. View a final interview report with score, strengths, weaknesses, and recommendations.
-7. Generate a personalized learning roadmap based on resume gaps and target role.
+The platform supports:
 
-## Core AI Agents
+- Resume upload and ATS-style resume building
+- Resume scoring against a real job description
+- RAG-grounded match analysis with retrieved evidence
+- Resume-aware mock interview generation
+- Technical and HR interview modes
+- Answer feedback and interview reports
+- Role-specific weekly roadmap generation
+- Coin-based usage and Razorpay payments
+- Firebase Google authentication
+- Production deployment on Vercel and Render
 
-| Agent | Responsibility |
-| --- | --- |
-| Resume Agent | Extracts resume data, ATS score, skills, missing skills, strengths, weaknesses, and suggested role. |
-| Interview Agent | Generates realistic HR or technical interview questions based on role and optional resume context. |
-| Feedback Agent | Evaluates every answer and returns score, feedback, and actionable improvements. |
-| Summary Agent | Produces the final interview report after all questions are completed. |
-| Roadmap Agent | Builds a personalized roadmap for a target role and package. |
-| Resource Agent | Enriches roadmap modules with documentation/articles and YouTube resources. |
+## What Makes It Different
 
-## Architecture
+Most resume scorers send a resume and job description directly to an LLM and hope the model reasons correctly. HireGen-AI adds a retrieval layer before generation.
 
-```mermaid
-flowchart LR
-    U[User] --> FE[React Frontend]
-    FE --> GW[API Gateway]
+The system extracts resume and JD text, chunks both documents, retrieves exact keyword matches with BM25, retrieves semantic matches with embeddings, ranks the best evidence with a hybrid strategy, and only then asks the LLM to score or generate questions.
 
-    GW --> AUTH[Auth Service]
-    GW --> RESUME[Resume Service]
-    GW --> INTERVIEW[Interview Service]
-    GW --> ROADMAP[Roadmap Service]
-    GW --> BILLING[Billing Service]
+That makes the AI output more grounded, more explainable, and more useful for real interview preparation.
 
-    AUTH --> REDIS[(Redis Sessions)]
-    GW --> REDIS
-
-    AUTH --> MONGO[(MongoDB)]
-    RESUME --> MONGO
-    INTERVIEW --> MONGO
-    ROADMAP --> MONGO
-    BILLING --> MONGO
-
-    RESUME --> LLM[Groq / LLM]
-    INTERVIEW --> LLM
-    ROADMAP --> LLM
-    ROADMAP --> YT[YouTube API]
-    BILLING --> RAZORPAY[Razorpay]
-    AUTH --> FIREBASE[Firebase Auth]
+```text
+Resume PDF + Job Description
+        |
+        v
+Text Extraction and Chunking
+        |
+        v
+BM25 Retrieval + Vector Retrieval
+        |
+        v
+Hybrid Evidence Ranking
+        |
+        v
+Grounded LLM Scoring and Interview Generation
+        |
+        v
+Evidence-backed UI, Feedback, and Reports
 ```
+
+## Core Features
+
+### Resume Scorer
+
+- Scores a resume against a target role and job description
+- Extracts matched skills, missing skills, keyword gaps, and recommendations
+- Stores RAG evidence pairs and retrieval metadata
+- Supports saved resume evaluations and history
+
+### Hybrid RAG Engine
+
+- `chunker.js` splits resume and JD text into labeled chunks
+- `bm25Retriever.js` finds exact keyword and skill overlap
+- `vectorRetriever.js` finds semantic similarity with embeddings
+- `hybridRetriever.js` combines both signals into ranked evidence
+- Local fallback embeddings keep development usable without paid keys
+
+### AI Interview Studio
+
+- Generates role-specific interview questions
+- Supports technical and HR interview modes
+- Uses resume/JD evidence when resume-aware mode is selected
+- Produces answer feedback and final reports
+
+### Roadmap Builder
+
+- Generates weekly learning plans for a target role, package, skill level, and experience range
+- Can use resume gap analysis for stronger personalization
+- Designed for campus placement and role-focused preparation
+
+### Billing and Credits
+
+- Coin-based access for AI features
+- Razorpay order creation and payment verification
+- Backend-side credential validation
+- Lazy-loaded checkout script so the public landing page stays fast
+
+### Production UX
+
+- Public landing page loads immediately without waiting for backend auth checks
+- Protected routes check authentication only when needed
+- Route-level code splitting reduces first-load bundle size
+- Vercel rewrite support for client-side routing
+- Render health endpoint for backend monitoring
 
 ## Tech Stack
 
-### Frontend
+Frontend:
 
-- React.js
+- React
+- Vite
 - React Router
 - Redux Toolkit
 - Tailwind CSS
-- Framer Motion / Motion
+- Motion
 - Recharts
-- Monaco Editor
-- Firebase Client SDK
+- Firebase client auth
 
-### Backend
+Backend:
 
 - Node.js
-- Express.js
-- MongoDB + Mongoose
-- Redis + ioredis
-- LangChain
-- LangGraph
-- Groq LLM
-- Firebase Admin SDK
+- Express
+- MongoDB and Mongoose
+- Firebase Admin
+- Redis / Upstash
 - Razorpay
-- Multer
-- PDF parsing
-- Docker
+- LangChain / LangGraph
+- Groq LLM integration
+- OpenAI embeddings with local fallback
 
-## Project Structure
+Deployment:
+
+- Vercel for frontend
+- Render for backend
+- MongoDB Atlas for database
+- Upstash Redis for session/cache support
+
+## Repository Structure
 
 ```text
 2.fresherAI/
   frontend/
     src/
-      apis/
-      assets/
-      components/
       pages/
+      components/
+      apis/
       redux/
       utils/
+    index.html
+    package.json
+
   backend/
+    index.js
     gateway/
-    shared/
-      redis/
     services/
       auth/
       billing/
       interview/
       resume/
+        rag/
       roadmap/
+    package.json
+
+  docs/
+    RAG_ARCHITECTURE.md
 ```
 
-## Backend Services
+## Local Setup
 
-| Service | Default Port | Purpose |
-| --- | ---: | --- |
-| Gateway | 6000 | Public API gateway, auth middleware, service proxying |
-| Auth | 6001 | Firebase login, Redis sessions, user coins |
-| Resume | 6002 | Resume upload, PDF parsing, AI resume analysis |
-| Interview | 6003 | AI interview lifecycle, feedback, final reports |
-| Roadmap | 6004 | Personalized roadmap generation and resources |
-| Billing | 6005 | Razorpay order creation and payment verification |
-| Redis | 6379 | Session and response caching |
-
-## Environment Variables
-
-Create `.env` files inside the respective service folders.
-
-### Frontend
-
-```env
-VITE_BACKEND_URL=http://localhost:6000
-VITE_FIREBASE_APIKEY=your_firebase_api_key
-VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
-```
-
-### Gateway
-
-```env
-PORT=6000
-FRONTEND_URL=http://localhost:5173
-REDIS_URL=redis://localhost:6379
-AUTH_SERVICE_URL=http://localhost:6001
-RESUME_SERVICE_URL=http://localhost:6002
-INTERVIEW_SERVICE_URL=http://localhost:6003
-ROADMAP_SERVICE_URL=http://localhost:6004
-BILLING_SERVICE_URL=http://localhost:6005
-```
-
-### Common Service Variables
-
-```env
-PORT=service_port
-MONGODB_URL=your_mongodb_connection_string
-REDIS_URL=redis://localhost:6379
-GROQ_API_KEY=your_groq_api_key
-GROQ_MODEL=openai/gpt-oss-120b
-```
-
-### Roadmap Service
-
-```env
-YOUTUBE_API_KEY=your_youtube_api_key
-```
-
-### Billing Service
-
-```env
-RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_key_secret
-```
-
-## Getting Started
-
-### 1. Clone the repository
+Clone the project and install dependencies:
 
 ```bash
 git clone https://github.com/zurakatsura-543/Multi-Agent-AI-Interview-Platform.git
 cd Multi-Agent-AI-Interview-Platform/2.fresherAI
 ```
 
-### 2. Start Redis
+Frontend:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Backend:
 
 ```bash
 cd backend
-docker compose up -d
-```
-
-### 3. Install dependencies
-
-```bash
-cd frontend
 npm install
-
-cd ../backend/gateway
-npm install
-
-cd ../services/auth
-npm install
-
-cd ../resume
-npm install
-
-cd ../interview
-npm install
-
-cd ../roadmap
-npm install
-
-cd ../billing
-npm install
+npm run dev:single
 ```
 
-### 4. Run backend services
-
-Open separate terminals for each service:
-
-```bash
-cd backend/gateway
-npm run dev
-```
-
-```bash
-cd backend/services/auth
-npm run dev
-```
-
-```bash
-cd backend/services/resume
-npm run dev
-```
-
-```bash
-cd backend/services/interview
-npm run dev
-```
-
-```bash
-cd backend/services/roadmap
-npm run dev
-```
-
-```bash
-cd backend/services/billing
-npm run dev
-```
-
-### 5. Run frontend
-
-```bash
-cd frontend
-npm run dev
-```
-
-Frontend runs on:
+Open:
 
 ```text
-http://localhost:5173
+Frontend: http://localhost:5173
+Backend:  http://localhost:8000/health
 ```
 
-## Feature Breakdown
+## Environment Variables
 
-### AI Resume Analyzer
+Create environment files locally. Do not commit real `.env` files or service account JSON files.
 
-- Upload PDF resumes.
-- Extract text using PDF parsing.
-- Analyze candidate profile using an LLM.
-- Generate ATS score, missing skills, role suggestions, strengths, weaknesses, and recommendations.
-- Cache resume insights for reuse in interviews and roadmaps.
+### Frontend `.env`
 
-### AI Interview Simulator
+```env
+VITE_BACKEND_URL=http://localhost:8000
+VITE_FIREBASE_APIKEY=your_firebase_web_api_key
+VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
+```
 
-- Choose target role and interview type.
-- Generate six structured questions.
-- Supports resume-aware personalization.
-- Includes timer, speech synthesis, speech recognition, camera preview, and code editor.
-- Provides feedback after each answer.
-- Generates final performance report.
+For production on Vercel:
 
-### AI Roadmap Generator
+```env
+VITE_BACKEND_URL=https://hiregen-ai-backend.onrender.com
+VITE_FIREBASE_APIKEY=your_firebase_web_api_key
+VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
+```
 
-- Generates personalized learning paths based on target role and package.
-- Uses resume gaps when available.
-- Produces ordered modules with duration, difficulty, and descriptions.
-- Adds articles/docs and YouTube resources for each module.
+### Backend `.env`
 
-### Dashboard
+```env
+NODE_ENV=development
+MONGODB_URL=your_mongodb_connection_string
+FRONTEND_URL=http://localhost:5173
+CORS_ORIGINS=http://localhost:5173
 
-- Tracks total interviews.
-- Shows completed interviews and average score.
-- Visualizes HR and technical performance across multiple skill dimensions.
+FIREBASE_SERVICE_ACCOUNT_BASE64=your_base64_encoded_firebase_service_account
 
-### Billing and Coins
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=openai/gpt-oss-120b
 
-- Users receive free starter coins.
-- AI features consume coins.
-- Razorpay integration allows purchasing additional interview coins.
+EMBEDDING_PROVIDER=auto
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 
-## Why This Project Stands Out
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 
-This is not a simple CRUD application. It combines AI orchestration, microservices, authentication, payments, caching, PDF processing, and real-time interview UX into one production-style platform.
+REDIS_URL=your_redis_url
+```
 
-The system demonstrates:
+For local free development, semantic retrieval can run with deterministic local embeddings:
 
-- Practical multi-agent AI architecture.
-- Service separation and API gateway routing.
-- AI output normalization and persistence.
-- Redis-backed authentication sessions.
-- Resume-aware personalization.
-- Scalable backend design ready for cloud deployment.
+```env
+EMBEDDING_PROVIDER=local
+```
 
-## Future Improvements
+## Deployment Notes
 
-- Add Kubernetes deployment manifests.
-- Add CI/CD pipeline.
-- Add automated backend tests.
-- Add admin analytics dashboard.
-- Add email reports after interviews.
-- Add cloud storage for uploaded resumes.
-- Add WebRTC-based live interview mode.
+### Vercel Frontend
 
-## Author
+Set the project root to:
 
-Built by [zurakatsura-543](https://github.com/zurakatsura-543)
+```text
+2.fresherAI/frontend
+```
+
+Required production variables:
+
+```env
+VITE_BACKEND_URL=https://hiregen-ai-backend.onrender.com
+VITE_FIREBASE_APIKEY=your_firebase_web_api_key
+VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
+```
+
+The app includes a Vercel rewrite configuration so direct routes like `/dashboard`, `/billing`, `/scorer`, and `/roadmap` load correctly.
+
+### Render Backend
+
+Set the root directory to:
+
+```text
+2.fresherAI/backend
+```
+
+Build command:
+
+```bash
+npm install
+```
+
+Start command:
+
+```bash
+npm start
+```
+
+Health check path:
+
+```text
+/health
+```
+
+Render free instances can spin down after inactivity. The landing page is optimized to load without waiting for the backend, but authenticated actions may still take longer on a cold backend.
+
+## RAG Implementation Details
+
+The RAG implementation is documented in detail here:
+
+- [docs/RAG_ARCHITECTURE.md](docs/RAG_ARCHITECTURE.md)
+- [backend/services/resume/rag/README.md](backend/services/resume/rag/README.md)
+
+Key engineering points:
+
+- Hybrid retrieval combines lexical and semantic search
+- Evidence packets are stored with resume evaluations
+- Interview generation can use retrieved resume/JD evidence
+- Feedback and final reports can reason over role-aligned context
+- Local embedding fallback keeps the app usable without external embedding APIs
+
+## Resume Talking Points
+
+- Built and deployed a full-stack AI interview preparation platform with React, Express, MongoDB, Firebase, Redis, Razorpay, and LLM integrations.
+- Implemented a hybrid RAG pipeline with resume/JD chunking, BM25 retrieval, semantic vector retrieval, hybrid ranking, and evidence-grounded scoring.
+- Designed resume-aware interview generation where questions are based on real resume strengths and JD gaps.
+- Improved production UX with route-level code splitting, lazy payment SDK loading, protected-route auth checks, and faster public landing-page rendering.
+- Added production deployment support across Vercel, Render, MongoDB Atlas, Upstash Redis, Firebase, Groq, OpenAI embeddings, and Razorpay.
+
+## Status
+
+HireGen-AI is live with:
+
+- Frontend deployed on Vercel
+- Backend deployed on Render
+- MongoDB connected
+- Firebase auth enabled
+- RAG-powered resume scoring and interview flows
+- Production CORS configured for the live frontend
 
 ## License
 
-This project is open for learning and portfolio use. Add a license file before using it for commercial distribution.
+This project is built for portfolio, learning, and demonstration purposes.
